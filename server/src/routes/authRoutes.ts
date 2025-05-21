@@ -1,0 +1,43 @@
+import express from 'express';
+import {
+  register,
+  verifyRegistrationOtp,
+  login,
+  verifyLoginOtp,
+  forgotPassword,
+  resetPassword,
+  getMe,
+} from '../controllers/authController';
+import {
+  registerValidation,
+  loginValidation,
+  resetPasswordValidation,
+  otpValidation,
+  validate,
+} from '../middleware/validation';
+import { protect } from '../middleware/auth';
+
+const router = express.Router();
+
+// Register user
+router.post('/register', registerValidation, validate, register);
+
+// Verify registration OTP - update route path
+router.post('/verify-registration', otpValidation, validate, verifyRegistrationOtp);
+
+// Login user
+router.post('/login', loginValidation, validate, login);
+
+// Verify login OTP (2FA) - update route path
+router.post('/verify-login', otpValidation, validate, verifyLoginOtp);
+
+// Forgot password
+router.post('/forgot-password', forgotPassword);
+
+// Reset password
+router.post('/reset-password/:resetToken', resetPasswordValidation, validate, resetPassword);
+
+// Get current user
+router.get('/me', protect, getMe);
+
+export default router;
