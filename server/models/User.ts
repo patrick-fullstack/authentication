@@ -1,4 +1,3 @@
-// filepath: ../server/src/models/User.ts
 import mongoose, { Document } from "mongoose";
 import bcrypt from "bcrypt";
 
