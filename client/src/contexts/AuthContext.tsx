@@ -12,7 +12,7 @@ interface AuthContextType {
   tempUserId: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
-  verifyOtp: (otp: string, isRegistration: boolean) => Promise<void>;
+  verifyOtp: (otp: string, isRegistration: boolean) => Promise<boolean>;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (token: string, password: string) => Promise<void>;
   logout: () => void;
@@ -79,11 +79,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Verify OTP with router navigation
   const verifyOtp = async (otp: string, isRegistration: boolean) => {
     try {
-      await zustandVerifyOtp(otp, isRegistration);
+      const result = await zustandVerifyOtp(otp, isRegistration);
       // If successful, we'll be authenticated
       if (useAuthStore.getState().isAuthenticated) {
         router.replace('/dashboard');
       }
+      return result; // Return the result from zustandVerifyOtp
     } catch (error) {
       // Error is already handled in Zustand store
       throw error;

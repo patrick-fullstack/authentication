@@ -23,6 +23,11 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   rememberSession: boolean;
+  updateProfile: (name: string) => Promise<boolean>;
+  updatePassword: (
+    currentPassword: string,
+    newPassword: string
+  ) => Promise<boolean>;
 
   // Auth actions
   login: (
@@ -211,6 +216,53 @@ export const useAuthStore = create<AuthState>()(
           toast.error(
             axiosError.response?.data?.message ||
               "Forgot password request failed"
+          );
+          throw error;
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      updateProfile: async (name: string) => {
+        try {
+          set({ isLoading: true });
+          const { data } = await api.put("/auth/profile", { name });
+
+          if (data.success && data.user) {
+            // Update the user in store
+            set({
+              user: data.user,
+            });
+            toast.success("Profile updated successfully");
+          }
+          return true;
+        } catch (error) {
+          const axiosError = error as AxiosError<ApiErrorResponse>;
+          toast.error(
+            axiosError.response?.data?.message || "Failed to update profile"
+          );
+          throw error;
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      updatePassword: async (currentPassword: string, newPassword: string) => {
+        try {
+          set({ isLoading: true });
+          const { data } = await api.put("/auth/password", {
+            currentPassword,
+            newPassword,
+          });
+
+          if (data.success) {
+            toast.success("Password updated successfully");
+          }
+          return true;
+        } catch (error) {
+          const axiosError = error as AxiosError<ApiErrorResponse>;
+          toast.error(
+            axiosError.response?.data?.message || "Failed to update password"
           );
           throw error;
         } finally {

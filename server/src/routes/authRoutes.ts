@@ -8,6 +8,8 @@ import {
   resetPassword,
   getMe,
   logout,
+  updateProfile,
+  updatePassword,
 } from "../controllers/authController";
 import {
   registerValidation,
@@ -50,6 +52,12 @@ router.post(
   validate,
   resetPassword
 );
+
+// Update profile
+router.put("/profile", protect, updateProfile);
+
+// Update password
+router.put("/password", protect, updatePassword);
 
 // Get current user
 router.get("/me", protect, getMe);
