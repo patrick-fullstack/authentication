@@ -31,11 +31,11 @@ interface AuthState {
     rememberMe?: boolean
   ) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
-  verifyOtp: (otp: string, isRegistration?: boolean) => Promise<void>;
+  verifyOtp: (otp: string, isRegistration?: boolean) => Promise<boolean>;
   logout: () => Promise<void>;
   resetPassword: (token: string, password: string) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
-  checkAuth: () => Promise<void>;
+  checkAuth: () => Promise<boolean>;
   setRememberSession: (remember: boolean) => void;
 }
 
@@ -130,30 +130,35 @@ export const useAuthStore = create<AuthState>()(
               "Authorization"
             ] = `Bearer ${data.token}`;
 
+            // ADD THIS: Set token as a cookie that middleware can access
+            document.cookie = `token=${data.token}; path=/; max-age=2592000; SameSite=Strict`;
+
             toast.success(
               isRegistration ? "Registration successful!" : "Login successful!"
             );
-            return;
+            return true;
           }
+          return false;
         } catch (error) {
           const axiosError = error as AxiosError<ApiErrorResponse>;
           toast.error(
-            axiosError.response?.data?.message || "OTP verification failed"
+            axiosError.response?.data?.message ||
+              (isRegistration ? "Registration failed" : "Login failed")
           );
           throw error;
-        } finally {
-          set({ isLoading: false });
         }
       },
 
       logout: async () => {
         try {
           set({ isLoading: true });
-          await api.post("/auth/logout");
+          await api
+            .post("/auth/logout")
+            .catch((e) => console.error("Logout API error:", e));
         } catch (error) {
           console.error("Logout failed:", error);
         } finally {
-          // Clear auth state regardless of API success
+          // Clear auth state
           set({
             token: null,
             user: null,
@@ -163,6 +168,10 @@ export const useAuthStore = create<AuthState>()(
 
           // Remove Authorization header
           delete api.defaults.headers.common["Authorization"];
+
+          // IMPORTANT: Clear the token cookie for middleware
+          document.cookie =
+            "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
 
           set({ isLoading: false });
         }
@@ -213,7 +222,7 @@ export const useAuthStore = create<AuthState>()(
         const token = get().token;
         if (!token) {
           set({ user: null, isAuthenticated: false });
-          return;
+          return false;
         }
 
         try {
@@ -222,18 +231,33 @@ export const useAuthStore = create<AuthState>()(
           api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
           const { data } = await api.get("/auth/me");
+          console.log("Auth check response:", data);
 
           if (data.success && data.user) {
             set({ user: data.user, isAuthenticated: true });
+            return true;
           } else {
             // If user data can't be fetched, clear auth state
             set({ token: null, user: null, isAuthenticated: false });
             delete api.defaults.headers.common["Authorization"];
+
+            // Clear the token cookie
+            document.cookie =
+              "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
+            return false;
           }
         } catch (error) {
-          console.log(error);
+          console.error("Auth check failed:", error);
+          // Handle authentication error
           set({ token: null, user: null, isAuthenticated: false });
           delete api.defaults.headers.common["Authorization"];
+
+          // Clear the token cookie
+          document.cookie =
+            "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
+          return false;
         } finally {
           set({ isLoading: false });
         }

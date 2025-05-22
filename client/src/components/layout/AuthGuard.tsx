@@ -12,24 +12,24 @@ interface AuthGuardProps {
 const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-otp'];
 
 export default function AuthGuard({ children }: AuthGuardProps) {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!loading) {
+    if (!isLoading) {
       // Check if path includes any of the public paths (for reset-password/:token case)
       const isPublicPath = publicPaths.some(path => pathname.startsWith(path));
-      
+
       if (!user && !isPublicPath) {
         router.push('/login');
       } else if (user && isPublicPath) {
         router.push('/dashboard');
       }
     }
-  }, [user, loading, pathname, router]);
+  }, [user, isLoading, pathname, router]);
 
-  if (loading) {
+  if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">
       <LoadingSpinner />
     </div>;

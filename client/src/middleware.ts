@@ -12,29 +12,36 @@ const authPaths = [
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  // const token = request.cookies.get("token")?.value;
+  const token = request.cookies.get("token")?.value;
 
-  // // Check if path is one that should be protected
-  // const isProtectedPath = protectedPaths.some((path) =>
-  //   pathname.startsWith(path)
-  // );
+  // For debugging (remove in production)
+  // if (process.env.NODE_ENV === "development") {
+  //   console.log(`[Middleware] Path: ${pathname}, Auth: ${!!token}`);
+  // }
 
-  // Check if path is an auth path (login, register, etc)
+  const isProtectedPath = protectedPaths.some((path) =>
+    pathname.startsWith(path)
+  );
+
   const isAuthPath = authPaths.some(
     (path) => pathname === path || pathname.startsWith(path)
   );
 
-  // // If user is not logged in and tries to access protected route, redirect to login
-  // if (isProtectedPath && !token) {
-  //   const url = new URL("/login", request.url);
-  //   return NextResponse.redirect(url);
-  // }
+  if (pathname.startsWith("/verify-otp")) {
+    return NextResponse.next();
+  }
 
-  // // If user is logged in and tries to access auth route, redirect to dashboard
-  // if (isAuthPath && token) {
-  //   return NextResponse.redirect(new URL("/dashboard", request.url));
-  // }
+  if (isProtectedPath && !token) {
+    const url = new URL("/login", request.url);
+    url.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(url);
+  }
 
+  if (isAuthPath && token) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // For all other routes, proceed normally
   return NextResponse.next();
 }
 

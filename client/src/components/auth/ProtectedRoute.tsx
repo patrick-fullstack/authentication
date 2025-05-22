@@ -1,25 +1,43 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
-    const { isAuthenticated, isLoading, token } = useAuthStore();
+    const { isAuthenticated, isLoading, token, checkAuth } = useAuthStore();
+    const [initialCheckDone, setInitialCheckDone] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
-        // If not authenticated, not loading, and we've checked for a token, redirect to login
-        if (!isAuthenticated && !isLoading && token === null) {
+        const verifyAuth = async () => {
+            // If we have a token but aren't authenticated yet, check with server
+            if (token && !isAuthenticated && !isLoading) {
+                await checkAuth();
+            }
+
+            setInitialCheckDone(true);
+        };
+
+        verifyAuth();
+    }, [token, isAuthenticated, checkAuth, isLoading]);
+
+    useEffect(() => {
+        // Only redirect after initial check is complete and not loading
+        if (initialCheckDone && !isLoading && !isAuthenticated) {
+            console.log("ProtectedRoute: Not authenticated, redirecting to login");
             router.replace('/login');
         }
-    }, [isAuthenticated, isLoading, router, token]);
+    }, [initialCheckDone, isAuthenticated, isLoading, router]);
 
-    // Show loading state while checking authentication
-    if (isLoading) {
-        return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+    // Show loading state during initial check or when explicitly loading
+    if (isLoading || !initialCheckDone) {
+        return <div className="w-full flex justify-center items-center p-8">
+            <LoadingSpinner />
+        </div>;
     }
 
-    // Only render children if authenticated
+    // If authenticated, render children
     return isAuthenticated ? <>{children}</> : null;
 }

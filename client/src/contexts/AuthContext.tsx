@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 // Keep the same interface to maintain compatibility
 interface AuthContextType {
   user: User | null;
-  loading: boolean; // maps to isLoading in Zustand
+  isLoading: boolean; // maps to isLoading in Zustand
   tempUserId: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
@@ -127,7 +127,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider
       value={{
         user,
-        loading: isLoading, // Map isLoading to loading for compatibility
+        isLoading: isLoading, // Map isLoading to loading for compatibility
         tempUserId,
         login,
         register,

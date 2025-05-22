@@ -5,7 +5,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { usePathname } from 'next/navigation';
 import AuthInitializer from '@/components/auth/AuthInitializer';
-import { AuthProvider } from '@/contexts/AuthContext'; // Add this import
+import { AuthProvider } from '@/contexts/AuthContext';
 import 'react-toastify/dist/ReactToastify.css';
 import './globals.css';
 
