@@ -113,7 +113,11 @@ if (env_1.env.NODE_ENV === "production") {
 }
 // Enable CORS with enhanced security
 const corsOptions = {
-    origin: 'http://localhost:3000',
+    origin: [
+        'http://localhost:3000',
+        'https://authentication-client-mu.vercel.app',
+        'https://authentication-client.vercel.app'
+    ],
     credentials: true,
     optionSuccessStatus: 200
 };

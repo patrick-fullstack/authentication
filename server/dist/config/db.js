@@ -15,6 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.isConnected = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const env_1 = require("./env");
+// Important: Configure mongoose to not buffer commands
+mongoose_1.default.set('bufferCommands', false); // Disable operation buffering
 // Track the connection status
 let isConnected = false;
 exports.isConnected = isConnected;
@@ -57,8 +59,6 @@ const connectDB = () => __awaiter(void 0, void 0, void 0, function* () {
     catch (error) {
         console.error(`MongoDB connection error: ${error instanceof Error ? error.message : 'Unknown error'}`);
         exports.isConnected = isConnected = false;
-        // Don't exit process in serverless environment
-        // process.exit(1);
     }
 });
 exports.default = connectDB;
