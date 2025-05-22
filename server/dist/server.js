@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -13,9 +22,22 @@ const morgan_1 = __importDefault(require("morgan"));
 const env_1 = require("./config/env");
 const db_1 = __importDefault(require("./config/db"));
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
+const mongoose_1 = __importDefault(require("mongoose"));
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+    console.error('UNCAUGHT EXCEPTION:', err);
+    // Don't exit in serverless environment
+});
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+    console.error('UNHANDLED REJECTION:', err);
+    // Don't exit in serverless environment
+});
 // Connect to database
 (0, db_1.default)();
 const app = (0, express_1.default)();
+// Trust proxy for proper IP detection behind Vercel's infrastructure
+app.set('trust proxy', 1);
 // Request logging
 if (env_1.env.NODE_ENV === "development") {
     app.use((0, morgan_1.default)("dev"));
@@ -50,6 +72,8 @@ const globalLimiter = (0, express_rate_limit_1.default)({
     max: 100,
     standardHeaders: true,
     legacyHeaders: false,
+    // Fix: use a valid option instead of trustProxy
+    skipSuccessfulRequests: false, // Optional setting
     message: {
         success: false,
         message: "Too many requests, please try again later.",
@@ -61,6 +85,8 @@ const authLimiter = (0, express_rate_limit_1.default)({
     max: 10,
     standardHeaders: true,
     legacyHeaders: false,
+    // Fix: use a valid option instead of trustProxy
+    skipSuccessfulRequests: false, // Optional setting
     message: {
         success: false,
         message: "Too many authentication attempts, please try again later.",
@@ -77,7 +103,7 @@ app.use((0, express_mongo_sanitize_1.default)());
 // Force HTTPS in production
 if (env_1.env.NODE_ENV === "production") {
     app.use((req, res, next) => {
-        if (req.header("x-forwarded-proto") !== "https") {
+        if (req.header("x-forwarded-proto") !== "https" && req.hostname !== 'localhost') {
             res.redirect(`https://${req.header("host")}${req.url}`);
         }
         else {
@@ -88,22 +114,30 @@ if (env_1.env.NODE_ENV === "production") {
 // Enable CORS with enhanced security
 app.use((0, cors_1.default)({
     origin: function (origin, callback) {
+        // For development/debugging - log the origin
+        console.log("Request origin:", origin);
         const allowedOrigins = [
             env_1.env.CLIENT_URL,
             'http://localhost:3000',
-            'https://your-frontend-domain.vercel.app' // Add your frontend Vercel URL
+            'https://authentication-client.vercel.app', // Replace with your actual frontend URL
+            'https://authentication-client-patrick-fullstacks-projects.vercel.app'
         ];
-        if (!origin || allowedOrigins.includes(origin)) {
+        // Allow requests with no origin (like mobile apps, Postman)
+        if (!origin) {
+            return callback(null, true);
+        }
+        if (allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         }
         else {
+            console.log(`Blocked origin: ${origin}`);
             callback(new Error('Not allowed by CORS'));
         }
     },
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Added OPTIONS for preflight
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
-    maxAge: 600, // Cache preflight requests for 10 minutes
+    maxAge: 86400, // Cache preflight requests for 24 hours
 }));
 // Secure cookie settings (for when you use cookies for auth)
 app.use((req, res, next) => {
@@ -114,6 +148,58 @@ app.use((req, res, next) => {
     };
     next();
 });
+// Debug route to check CORS and server status
+app.get("/api/debug-cors", (req, res) => {
+    res.json({
+        message: "CORS is working correctly",
+        timestamp: new Date().toISOString(),
+        headers: {
+            "Access-Control-Allow-Origin": res.getHeader("Access-Control-Allow-Origin"),
+            "Access-Control-Allow-Methods": res.getHeader("Access-Control-Allow-Methods"),
+            "Access-Control-Allow-Headers": res.getHeader("Access-Control-Allow-Headers"),
+            "Access-Control-Allow-Credentials": res.getHeader("Access-Control-Allow-Credentials")
+        },
+        environment: {
+            NODE_ENV: env_1.env.NODE_ENV,
+            CLIENT_URL: env_1.env.CLIENT_URL
+        },
+        request: {
+            origin: req.headers.origin,
+            referer: req.headers.referer
+        }
+    });
+});
+// Debug route to check server status
+app.get('/api/system/status', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // Check MongoDB connection
+        const dbStatus = mongoose_1.default.connection.readyState === 1 ? 'connected' : 'disconnected';
+        // Check environment variables (mask sensitive data)
+        const envCheck = {
+            NODE_ENV: env_1.env.NODE_ENV,
+            JWT_SECRET: env_1.env.JWT_SECRET ? 'Set' : 'Not set',
+            MONGO_URI: env_1.env.MONGO_URI ? 'Set' : 'Not set',
+            EMAIL_CONFIG: env_1.env.EMAIL_HOST && env_1.env.EMAIL_USERNAME ? 'Set' : 'Not set',
+        };
+        res.json({
+            status: 'operational',
+            time: new Date().toISOString(),
+            environment: env_1.env.NODE_ENV,
+            database: dbStatus,
+            config: envCheck
+        });
+    }
+    catch (error) {
+        // Fix: properly type the error
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorStack = error instanceof Error ? error.stack : undefined;
+        res.status(500).json({
+            status: 'error',
+            message: errorMessage,
+            stack: env_1.env.NODE_ENV === 'production' ? null : errorStack
+        });
+    }
+}));
 // Mount routes
 app.use("/api/auth", authRoutes_1.default);
 // Default route
@@ -132,6 +218,7 @@ app.use((err, req, res, next) => {
         message: env_1.env.NODE_ENV === "production" ? "Internal server error" : err.message,
     });
 });
+// Only start server when running locally, not on Vercel
 if (process.env.NODE_ENV !== 'production') {
     app.listen(env_1.env.PORT, () => console.log(`Server running on port ${env_1.env.PORT}`));
 }
