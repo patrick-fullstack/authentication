@@ -12,27 +12,53 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.isConnected = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const env_1 = require("./env");
 // Track the connection status
 let isConnected = false;
+exports.isConnected = isConnected;
 const connectDB = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // If already connected, return
         if (isConnected) {
-            console.log('MongoDB is already connected');
+            console.log('Using existing MongoDB connection');
             return;
         }
-        // Connection options for serverless environments
+        // Connection options optimized for serverless environments
         const conn = yield mongoose_1.default.connect(env_1.env.MONGO_URI, {
-            serverSelectionTimeoutMS: 5000,
+            serverSelectionTimeoutMS: 15000, // Increased timeout
             socketTimeoutMS: 45000,
+            connectTimeoutMS: 30000,
+            maxPoolSize: 10, // Limit connections in serverless
+            minPoolSize: 5,
+            writeConcern: {
+                w: 'majority',
+                j: true
+            }
         });
-        isConnected = true;
+        // Set up connection event handlers
+        mongoose_1.default.connection.on('connected', () => {
+            exports.isConnected = isConnected = true;
+            console.log('MongoDB connection established');
+        });
+        mongoose_1.default.connection.on('error', (err) => {
+            console.error('MongoDB connection error:', err);
+            exports.isConnected = isConnected = false;
+        });
+        mongoose_1.default.connection.on('disconnected', () => {
+            console.log('MongoDB disconnected');
+            exports.isConnected = isConnected = false;
+        });
+        // Set the connection status
+        exports.isConnected = isConnected = true;
         console.log(`MongoDB Connected: ${conn.connection.host}`);
     }
     catch (error) {
-        console.error(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        console.error(`MongoDB connection error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        exports.isConnected = isConnected = false;
+        // Don't exit process in serverless environment
+        // process.exit(1);
     }
 });
 exports.default = connectDB;

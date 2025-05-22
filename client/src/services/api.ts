@@ -1,7 +1,7 @@
 import axios from "axios";
 // import Cookies from "js-cookie";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://authentication-server-c14r44xty-patrick-fullstacks-projects.vercel.app/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://authentication-server-opal.vercel.app";
 
 const api = axios.create({
   baseURL: API_URL,

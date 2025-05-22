@@ -8,22 +8,52 @@ const connectDB = async (): Promise<void> => {
   try {
     // If already connected, return
     if (isConnected) {
-      console.log('MongoDB is already connected');
+      console.log('Using existing MongoDB connection');
       return;
     }
 
-    // Connection options for serverless environments
+    // Connection options optimized for serverless environments
     const conn = await mongoose.connect(env.MONGO_URI, {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 15000,  // Increased timeout
       socketTimeoutMS: 45000,
+      connectTimeoutMS: 30000,
+      maxPoolSize: 10,                 // Limit connections in serverless
+      minPoolSize: 5,
+      writeConcern: {
+        w: 'majority',
+        j: true
+      }
     });
 
+    // Set up connection event handlers
+    mongoose.connection.on('connected', () => {
+      isConnected = true;
+      console.log('MongoDB connection established');
+    });
+
+    mongoose.connection.on('error', (err) => {
+      console.error('MongoDB connection error:', err);
+      isConnected = false;
+    });
+
+    mongoose.connection.on('disconnected', () => {
+      console.log('MongoDB disconnected');
+      isConnected = false;
+    });
+
+    // Set the connection status
     isConnected = true;
     console.log(`MongoDB Connected: ${conn.connection.host}`);
+    
   } catch (error) {
-    console.error(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-
+    console.error(`MongoDB connection error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    isConnected = false;
+    
+    // Don't exit process in serverless environment
+    // process.exit(1);
   }
 };
 
+// Export both the connection function and the connection state
+export { isConnected };
 export default connectDB;
