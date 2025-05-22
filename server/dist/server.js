@@ -114,30 +114,32 @@ if (env_1.env.NODE_ENV === "production") {
 // Enable CORS with enhanced security
 app.use((0, cors_1.default)({
     origin: function (origin, callback) {
-        // For development/debugging - log the origin
-        console.log("Request origin:", origin);
+        // For development, allow all origins
+        // For production, you would restrict this
         const allowedOrigins = [
-            env_1.env.CLIENT_URL,
             'http://localhost:3000',
-            'https://authentication-client.vercel.app', // Replace with your actual frontend URL
-            'https://authentication-client-patrick-fullstacks-projects.vercel.app'
+            'https://authentication-client.vercel.app',
+            'https://authentication-client-patrick-fullstacks-projects.vercel.app',
+            // Add your additional domains here
         ];
-        // Allow requests with no origin (like mobile apps, Postman)
-        if (!origin) {
-            return callback(null, true);
-        }
-        if (allowedOrigins.indexOf(origin) !== -1) {
+        // Log the origin for debugging
+        console.log('Request origin:', origin);
+        // For development purposes, allow all origins
+        // In production, you'd want to be more restrictive
+        if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         }
         else {
-            console.log(`Blocked origin: ${origin}`);
-            callback(new Error('Not allowed by CORS'));
+            console.log('Blocked origin:', origin);
+            callback(null, false); // Changed from throwing an error to just returning false
         }
     },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Added OPTIONS for preflight
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
     maxAge: 86400, // Cache preflight requests for 24 hours
+    preflightContinue: false, // Add this to ensure preflight requests are handled correctly
+    optionsSuccessStatus: 204 // Add this for proper OPTIONS response
 }));
 // Secure cookie settings (for when you use cookies for auth)
 app.use((req, res, next) => {
