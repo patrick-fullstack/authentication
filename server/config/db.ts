@@ -1,6 +1,9 @@
 import mongoose from 'mongoose';
 import { env } from './env';
 
+// Important: Configure mongoose to not buffer commands
+mongoose.set('bufferCommands', false); // Disable operation buffering
+
 // Track the connection status
 let isConnected = false;
 
@@ -48,9 +51,6 @@ const connectDB = async (): Promise<void> => {
   } catch (error) {
     console.error(`MongoDB connection error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     isConnected = false;
-    
-    // Don't exit process in serverless environment
-    // process.exit(1);
   }
 };
 
