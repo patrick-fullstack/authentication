@@ -87,7 +87,19 @@ if (env_1.env.NODE_ENV === "production") {
 }
 // Enable CORS with enhanced security
 app.use((0, cors_1.default)({
-    origin: env_1.env.CLIENT_URL,
+    origin: function (origin, callback) {
+        const allowedOrigins = [
+            env_1.env.CLIENT_URL,
+            'http://localhost:3000',
+            'https://your-frontend-domain.vercel.app' // Add your frontend Vercel URL
+        ];
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        }
+        else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -120,5 +132,7 @@ app.use((err, req, res, next) => {
         message: env_1.env.NODE_ENV === "production" ? "Internal server error" : err.message,
     });
 });
-app.listen(env_1.env.PORT, () => console.log(`Server running on port ${env_1.env.PORT}`));
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(env_1.env.PORT, () => console.log(`Server running on port ${env_1.env.PORT}`));
+}
 exports.default = app;

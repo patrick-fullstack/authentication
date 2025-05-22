@@ -13,17 +13,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
-const dotenv_1 = __importDefault(require("dotenv"));
 const env_1 = require("./env");
-dotenv_1.default.config();
+// Track the connection status
+let isConnected = false;
 const connectDB = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const conn = yield mongoose_1.default.connect(env_1.env.MONGO_URI);
+        // If already connected, return
+        if (isConnected) {
+            console.log('MongoDB is already connected');
+            return;
+        }
+        // Connection options for serverless environments
+        const conn = yield mongoose_1.default.connect(env_1.env.MONGO_URI, {
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
+        });
+        isConnected = true;
         console.log(`MongoDB Connected: ${conn.connection.host}`);
     }
     catch (error) {
         console.error(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        process.exit(1);
     }
 });
 exports.default = connectDB;
