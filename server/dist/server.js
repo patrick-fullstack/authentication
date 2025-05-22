@@ -112,35 +112,12 @@ if (env_1.env.NODE_ENV === "production") {
     });
 }
 // Enable CORS with enhanced security
-app.use((0, cors_1.default)({
-    origin: function (origin, callback) {
-        // For development, allow all origins
-        // For production, you would restrict this
-        const allowedOrigins = [
-            'http://localhost:3000',
-            'https://authentication-client.vercel.app',
-            'https://authentication-client-patrick-fullstacks-projects.vercel.app',
-            // Add your additional domains here
-        ];
-        // Log the origin for debugging
-        console.log('Request origin:', origin);
-        // For development purposes, allow all origins
-        // In production, you'd want to be more restrictive
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        }
-        else {
-            console.log('Blocked origin:', origin);
-            callback(null, false); // Changed from throwing an error to just returning false
-        }
-    },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+const corsOptions = {
+    origin: 'http://localhost:3000',
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
-    maxAge: 86400, // Cache preflight requests for 24 hours
-    preflightContinue: false, // Add this to ensure preflight requests are handled correctly
-    optionsSuccessStatus: 204 // Add this for proper OPTIONS response
-}));
+    optionSuccessStatus: 200
+};
+app.use((0, cors_1.default)(corsOptions));
 // Secure cookie settings (for when you use cookies for auth)
 app.use((req, res, next) => {
     //secureCookie method instead of overriding the existing one
