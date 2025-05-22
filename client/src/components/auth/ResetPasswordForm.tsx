@@ -9,15 +9,33 @@ import { useAuth } from '@/hooks/useAuth';
 import Input from '../common/Input';
 import Button from '../common/Button';
 import Card from '../common/Card';
+import { AxiosError } from 'axios';
+
+// Define interface for server error response
+interface ServerValidationError {
+  path: string;
+  msg: string;
+}
+
+interface ErrorResponse {
+  success: boolean;
+  message?: string;
+  errors?: ServerValidationError[];
+}
 
 interface ResetPasswordFormProps {
   token: string;
 }
 
+// Updated schema to match server validation
 const schema = yup.object({
   password: yup.string()
     .required('Password is required')
-    .min(6, 'Password must be at least 6 characters'),
+    .min(8, 'Password must be at least 8 characters')
+    .matches(/^(?=.*\d)/, 'Password must include at least one number')
+    .matches(/^(?=.*[a-z])/, 'Password must include at least one lowercase letter')
+    .matches(/^(?=.*[A-Z])/, 'Password must include at least one uppercase letter')
+    .matches(/^(?=.*[!@#$%^&*])/, 'Password must include at least one special character (!@#$%^&*)'),
   confirmPassword: yup.string()
     .oneOf([yup.ref('password')], 'Passwords must match')
     .required('Please confirm your password'),
@@ -29,6 +47,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   const { resetPassword } = useAuth();
   const [loading, setLoading] = useState(false);
   const [resetComplete, setResetComplete] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const router = useRouter();
 
   const {
@@ -70,6 +89,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   const onSubmit = async (data: FormData) => {
     try {
       setLoading(true);
+      setServerError(null);
       await resetPassword(token, data.password);
 
       // Mark reset as complete
@@ -79,6 +99,19 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       // This happens in the useEffect to ensure consistent behavior
     } catch (error) {
       console.error('Password reset failed:', error);
+
+      // Type-safe error handling
+      const axiosError = error as AxiosError<ErrorResponse>;
+
+      if (axiosError.response?.data?.errors) {
+        // Format error messages from the server
+        const errorMessages = axiosError.response.data.errors.map((err) =>
+          `${err.path}: ${err.msg}`
+        ).join(', ');
+        setServerError(errorMessages);
+      } else {
+        setServerError(axiosError.response?.data?.message || 'Password reset failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -90,6 +123,8 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       subtitle="Enter your new password"
     >
       <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        {serverError && <div className="p-3 bg-red-100 text-red-700 rounded-md">{serverError}</div>}
+
         <div className="space-y-4">
           <Input
             id="password"
@@ -99,6 +134,17 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             placeholder="New password"
             {...register('password')}
           />
+
+          <div className="text-xs text-gray-600 mt-1">
+            <p>Password must:</p>
+            <ul className="list-disc pl-5">
+              <li>Be at least 8 characters long</li>
+              <li>Include at least one number</li>
+              <li>Include at least one lowercase letter</li>
+              <li>Include at least one uppercase letter</li>
+              <li>Include at least one special character (!@#$%^&*)</li>
+            </ul>
+          </div>
 
           <Input
             id="confirmPassword"

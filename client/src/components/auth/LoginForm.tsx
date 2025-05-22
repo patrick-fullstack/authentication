@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -10,10 +10,27 @@ import Input from '../common/Input';
 import Button from '../common/Button';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
+import { AxiosError } from 'axios';
 
+// Define interface for server error response
+interface ServerValidationError {
+  path: string;
+  msg: string;
+}
+
+interface ErrorResponse {
+  success: boolean;
+  message?: string;
+  errors?: ServerValidationError[];
+}
+
+// Updated schema to match server validation
 const schema = yup.object({
-  email: yup.string().email('Must be a valid email').required('Email is required'),
-  password: yup.string().required('Password is required'),
+  email: yup.string()
+    .email('Please include a valid email')
+    .required('Email is required'),
+  password: yup.string()
+    .required('Password is required')
 });
 
 type FormData = yup.InferType<typeof schema>;
@@ -21,6 +38,7 @@ type FormData = yup.InferType<typeof schema>;
 export default function LoginForm() {
   const { login, isLoading } = useAuthStore();
   const router = useRouter();
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const {
     register,
@@ -32,18 +50,33 @@ export default function LoginForm() {
 
   const onSubmit = async (data: FormData) => {
     try {
+      setServerError(null);
       await login(data.email, data.password);
       if (useAuthStore.getState().tempUserId) {
         router.push('/verify-otp?mode=login');
       }
     } catch (error) {
       console.error(error);
+      // Type-safe error handling
+      const axiosError = error as AxiosError<ErrorResponse>;
+
+      if (axiosError.response?.data?.errors) {
+        // Format error messages from the server
+        const errorMessages = axiosError.response.data.errors.map((err) =>
+          `${err.path}: ${err.msg}`
+        ).join(', ');
+        setServerError(errorMessages);
+      } else {
+        setServerError(axiosError.response?.data?.message || 'Login failed. Please try again.');
+      }
     }
   };
 
   return (
     <Card title="Sign in to your account">
       <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        {serverError && <div className="p-3 bg-red-100 text-red-700 rounded-md">{serverError}</div>}
+
         <div className="space-y-4">
           <Input
             id="email"

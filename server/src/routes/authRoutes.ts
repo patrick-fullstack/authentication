@@ -1,4 +1,5 @@
 import express from "express";
+import rateLimit from "express-rate-limit";
 import {
   register,
   verifyRegistrationOtp,
@@ -22,12 +23,25 @@ import { protect } from "../middleware/auth";
 
 const router = express.Router();
 
-// Register user
-router.post("/register", registerValidation, validate, register);
+// Configure auth rate limiter
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many authentication attempts, please try again later.",
+  },
+});
 
-// Verify registration OTP - update route path
+// Register user - with rate limiting
+router.post("/register", authLimiter, registerValidation, validate, register);
+
+// Verify registration OTP
 router.post(
   "/verify-registration",
+  authLimiter,
   otpValidation,
   validate,
   verifyRegistrationOtp
@@ -36,22 +50,23 @@ router.post(
 // Logout
 router.post("/logout", protect, logout);
 
-// Login user
-router.post("/login", loginValidation, validate, login);
+// Login user - with rate limiting
+router.post("/login", authLimiter, loginValidation, validate, login);
 
-// Verify login OTP (2FA) - update route path
-router.post("/verify-login", otpValidation, validate, verifyLoginOtp);
+// Verify login OTP (2FA)
+router.post(
+  "/verify-login",
+  authLimiter,
+  otpValidation,
+  validate,
+  verifyLoginOtp
+);
 
-// Forgot password
-router.post("/forgot-password", forgotPassword);
+// Forgot password - with rate limiting
+router.post("/forgot-password", authLimiter, forgotPassword);
 
 // Reset password
-router.post(
-  "/reset-password/:resetToken",
-  resetPasswordValidation,
-  validate,
-  resetPassword
-);
+router.post("/reset-password/:resetToken", validate, resetPassword);
 
 // Update profile
 router.put("/profile", protect, updateProfile);

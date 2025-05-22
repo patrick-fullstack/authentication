@@ -4,6 +4,7 @@ import crypto from "crypto";
 import User from "../models/User";
 import { sendOtpEmail, sendPasswordResetEmail } from "../services/emailService";
 import { env } from "../config/env";
+import BlackListedToken from "../models/BlackListedToken";
 
 // Generate JWT token
 const generateToken = (id: string): string => {
@@ -295,12 +296,16 @@ export const resetPassword = async (
       .update(req.params.resetToken)
       .digest("hex");
 
+    // Debug log to troubleshoot token issues
+    console.log("Attempting to reset password with token:", resetPasswordToken);
+
     const user = await User.findOne({
       resetPasswordToken,
-      resetPasswordExpiry: { $gt: Date.now() },
+      resetPasswordExpiry: { $gt: new Date() }, // Use new Date() instead of Date.now()
     });
 
     if (!user) {
+      console.log("Invalid or expired token, no user found");
       res
         .status(400)
         .json({ success: false, message: "Invalid or expired token" });
@@ -318,7 +323,7 @@ export const resetPassword = async (
       message: "Password updated successfully",
     });
   } catch (error) {
-    console.error(error);
+    console.error("Reset password error:", error);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -358,14 +363,25 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
 // Logout user
 export const logout = async (req: Request, res: Response) => {
   try {
-    // You can add any server-side logout logic here
-    // For example, invalidating refresh tokens, etc.
+    // Get token from request (assuming it's extracted in auth middleware)
+    const authHeader = req.headers.authorization;
+
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+
+      // Add token to blacklist with expiry time (use same expiry as your JWT)
+      await BlackListedToken.create({
+        token,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days or match your JWT expiry
+      });
+    }
 
     res.status(200).json({
       success: true,
       message: "Logged out successfully",
     });
   } catch (error) {
+    console.error("Logout error:", error);
     res.status(500).json({
       success: false,
       message: "Server error",

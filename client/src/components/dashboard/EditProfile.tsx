@@ -4,26 +4,40 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-// import { toast } from 'react-toastify';
 import { useAuth } from '@/hooks/useAuth';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import { useAuthStore } from '@/store/authStore';
+import { AxiosError } from 'axios';
+
+// Define interface for server error response
+interface ServerValidationError {
+    path: string;
+    msg: string;
+}
+
+interface ErrorResponse {
+    success: boolean;
+    message?: string;
+    errors?: ServerValidationError[];
+}
 
 // Validation schema for profile information form
 const profileSchema = yup.object({
     name: yup.string().required('Name is required'),
 });
 
-// Validation schema for password change form
+// Updated validation schema for password change form with strict rules
 const passwordSchema = yup.object({
     currentPassword: yup.string().required('Current password is required'),
-    newPassword: yup
-        .string()
+    newPassword: yup.string()
         .required('New password is required')
-        .min(6, 'Password must be at least 6 characters'),
-    confirmPassword: yup
-        .string()
+        .min(8, 'Password must be at least 8 characters')
+        .matches(/^(?=.*\d)/, 'Password must include at least one number')
+        .matches(/^(?=.*[a-z])/, 'Password must include at least one lowercase letter')
+        .matches(/^(?=.*[A-Z])/, 'Password must include at least one uppercase letter')
+        .matches(/^(?=.*[!@#$%^&*])/, 'Password must include at least one special character (!@#$%^&*)'),
+    confirmPassword: yup.string()
         .oneOf([yup.ref('newPassword')], 'Passwords must match')
         .required('Please confirm your password'),
 });
@@ -34,11 +48,9 @@ type PasswordFormData = yup.InferType<typeof passwordSchema>;
 
 export default function EditProfile() {
     const { user } = useAuth();
-
     const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
-
     const [isUpdating, setIsUpdating] = useState(false);
-
+    const [serverError, setServerError] = useState<string | null>(null);
     const { updateProfile: updateProfileStore, updatePassword: updatePasswordStore } = useAuthStore();
 
     const {
@@ -68,12 +80,24 @@ export default function EditProfile() {
 
         try {
             setIsUpdating(true);
-
+            setServerError(null);
             await updateProfileStore(data.name);
-
             resetProfile({ name: data.name });
+            // Show success message here
         } catch (error) {
             console.error('Profile update error:', error);
+
+            // Type-safe error handling
+            const axiosError = error as AxiosError<ErrorResponse>;
+
+            if (axiosError.response?.data?.errors) {
+                const errorMessages = axiosError.response.data.errors.map((err) =>
+                    `${err.path}: ${err.msg}`
+                ).join(', ');
+                setServerError(errorMessages);
+            } else {
+                setServerError(axiosError.response?.data?.message || 'Profile update failed. Please try again.');
+            }
         } finally {
             setIsUpdating(false);
         }
@@ -85,12 +109,24 @@ export default function EditProfile() {
 
         try {
             setIsUpdating(true);
-
+            setServerError(null);
             await updatePasswordStore(data.currentPassword, data.newPassword);
-
             resetPassword();
+            // Show success message here
         } catch (error) {
             console.error('Password update error:', error);
+
+            // Type-safe error handling
+            const axiosError = error as AxiosError<ErrorResponse>;
+
+            if (axiosError.response?.data?.errors) {
+                const errorMessages = axiosError.response.data.errors.map((err) =>
+                    `${err.path}: ${err.msg}`
+                ).join(', ');
+                setServerError(errorMessages);
+            } else {
+                setServerError(axiosError.response?.data?.message || 'Password update failed. Please try again.');
+            }
         } finally {
             setIsUpdating(false);
         }
@@ -123,6 +159,13 @@ export default function EditProfile() {
                     Change Password
                 </button>
             </div>
+
+            {/* Server error message */}
+            {serverError && (
+                <div className="p-3 mb-4 bg-red-100 text-red-700 rounded-md">
+                    {serverError}
+                </div>
+            )}
 
             {/* Profile Form */}
             {activeTab === 'profile' && (
@@ -184,6 +227,17 @@ export default function EditProfile() {
                             error={passwordErrors.newPassword?.message}
                             {...registerPassword('newPassword')}
                         />
+
+                        <div className="text-xs text-gray-600 mt-1">
+                            <p>Password must:</p>
+                            <ul className="list-disc pl-5">
+                                <li>Be at least 8 characters long</li>
+                                <li>Include at least one number</li>
+                                <li>Include at least one lowercase letter</li>
+                                <li>Include at least one uppercase letter</li>
+                                <li>Include at least one special character (!@#$%^&*)</li>
+                            </ul>
+                        </div>
 
                         <Input
                             id="confirmPassword"
