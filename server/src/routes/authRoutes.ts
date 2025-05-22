@@ -1,4 +1,5 @@
-import express from 'express';
+import express from "express";
+import rateLimit from "express-rate-limit";
 import {
   register,
   verifyRegistrationOtp,
@@ -7,37 +8,73 @@ import {
   forgotPassword,
   resetPassword,
   getMe,
-} from '../controllers/authController';
+  logout,
+  updateProfile,
+  updatePassword,
+} from "../controllers/authController";
 import {
   registerValidation,
   loginValidation,
   resetPasswordValidation,
   otpValidation,
   validate,
-} from '../middleware/validation';
-import { protect } from '../middleware/auth';
+} from "../middleware/validation";
+import { protect } from "../middleware/auth";
 
 const router = express.Router();
 
-// Register user
-router.post('/register', registerValidation, validate, register);
+// Configure auth rate limiter
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many authentication attempts, please try again later.",
+  },
+});
 
-// Verify registration OTP - update route path
-router.post('/verify-registration', otpValidation, validate, verifyRegistrationOtp);
+// Register user - with rate limiting
+router.post("/register", authLimiter, registerValidation, validate, register);
 
-// Login user
-router.post('/login', loginValidation, validate, login);
+// Verify registration OTP
+router.post(
+  "/verify-registration",
+  authLimiter,
+  otpValidation,
+  validate,
+  verifyRegistrationOtp
+);
 
-// Verify login OTP (2FA) - update route path
-router.post('/verify-login', otpValidation, validate, verifyLoginOtp);
+// Logout
+router.post("/logout", protect, logout);
 
-// Forgot password
-router.post('/forgot-password', forgotPassword);
+// Login user - with rate limiting
+router.post("/login", authLimiter, loginValidation, validate, login);
+
+// Verify login OTP (2FA)
+router.post(
+  "/verify-login",
+  authLimiter,
+  otpValidation,
+  validate,
+  verifyLoginOtp
+);
+
+// Forgot password - with rate limiting
+router.post("/forgot-password", authLimiter, forgotPassword);
 
 // Reset password
-router.post('/reset-password/:resetToken', resetPasswordValidation, validate, resetPassword);
+router.post("/reset-password/:resetToken", validate, resetPassword);
+
+// Update profile
+router.put("/profile", protect, updateProfile);
+
+// Update password
+router.put("/password", protect, updatePassword);
 
 // Get current user
-router.get('/me', protect, getMe);
+router.get("/me", protect, getMe);
 
 export default router;

@@ -7,17 +7,17 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import UserProfile from '@/components/dashboard/UserProfile';
 
 export default function DashboardPage() {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!isLoading && !user) {
       router.replace('/login');
     }
-  }, [user, loading, router]);
+  }, [user, isLoading, router]);
 
   // Show loading state while checking authentication
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="w-full h-full flex items-center justify-center min-h-[400px]">
         <LoadingSpinner />
@@ -34,7 +34,7 @@ export default function DashboardPage() {
     <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
       <h1 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">Welcome to the Dashboard</h1>
       <p className="text-center text-gray-600 dark:text-gray-300 mb-8">You have successfully logged in with 2FA!</p>
-      
+
       <UserProfile />
     </div>
   );

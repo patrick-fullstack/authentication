@@ -7,17 +7,17 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 export default function Home() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
-    if (!loading) {
+    if (!isLoading) {
       if (user) {
         router.replace('/dashboard');
       } else {
         router.replace('/login');
       }
     }
-  }, [user, loading, router]);
+  }, [user, isLoading, router]);
 
   return (
     <div className="w-full h-full flex items-center justify-center">

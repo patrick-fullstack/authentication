@@ -1,33 +1,53 @@
-import dotenv from 'dotenv';
-import path from 'path';
-import { z } from 'zod';
+import dotenv from "dotenv";
+import { z } from "zod";
 
-// Load environment variables from .env file
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+// Load environment variables
+dotenv.config();
 
-// Define environment variable schema
+// Define schema for environment variables
 const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.string().transform(Number).default('5000'),
-  MONGO_URI: z.string().min(1, 'MongoDB URI is required'),
-  JWT_SECRET: z.string().min(1, 'JWT secret is required'),
-  CLIENT_URL: z.string().url('Client URL must be a valid URL'),
-  EMAIL_USERNAME: z.string().min(1, 'Email username is required'),
-  EMAIL_APP_PASSWORD: z.string().min(1, 'Email app password is required'),
+  NODE_ENV: z
+    .enum(["development", "production", "test"])
+    .default("development"),
+  PORT: z
+    .string()
+    .transform((val) => parseInt(val, 10))
+    .default("5000"),
+  MONGO_URI: z.string(),
+  JWT_SECRET: z
+    .string()
+    .min(32, "JWT_SECRET must be at least 32 characters long"),
+  JWT_EXPIRE: z.string().default("30d"),
+  EMAIL_HOST: z.string(),
+  EMAIL_PORT: z.string().transform((val) => parseInt(val, 10)),
+  EMAIL_USERNAME: z.string(),
+  EMAIL_APP_PASSWORD: z.string(),
+  EMAIL_FROM: z.string(),
+  CLIENT_URL: z.string(),
 });
 
-// Parse and validate environment variables
-const _env = envSchema.safeParse(process.env);
+// Declare the env variable at the top level
+let env: z.infer<typeof envSchema>;
 
-// Handle validation errors
-if (!_env.success) {
-  console.error('❌ Invalid environment variables:', _env.error.flatten().fieldErrors);
-  throw new Error('Invalid environment variables');
+// Validate environment variables
+try {
+  env = envSchema.parse({
+    NODE_ENV: process.env.NODE_ENV,
+    PORT: process.env.PORT,
+    MONGO_URI: process.env.MONGO_URI,
+    JWT_SECRET: process.env.JWT_SECRET,
+    JWT_EXPIRE: process.env.JWT_EXPIRE,
+    EMAIL_HOST: process.env.EMAIL_HOST,
+    EMAIL_PORT: process.env.EMAIL_PORT,
+    EMAIL_USERNAME: process.env.EMAIL_USERNAME,
+    EMAIL_APP_PASSWORD: process.env.EMAIL_APP_PASSWORD,
+    EMAIL_FROM: process.env.EMAIL_FROM,
+    CLIENT_URL: process.env.CLIENT_URL,
+  });
+} catch (error) {
+  console.error("Environment validation failed:", error);
+  process.exit(1);
 }
 
-// Export validated environment variables
-export const env = _env.data;
-
-// Log environment setup (excluding sensitive data)
-console.log(`🌍 Environment: ${env.NODE_ENV}`);
-console.log(`🚀 Server will run on port ${env.PORT}`);
+// Export the env variable at the top level
+export { env };

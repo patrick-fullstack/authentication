@@ -1,15 +1,15 @@
-import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
-import User from '../models/User';
-import { sendOtpEmail, sendPasswordResetEmail } from '../services/emailService';
-import { env } from '../config/env';
-
+import { Request, Response } from "express";
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import User from "../models/User";
+import { sendOtpEmail, sendPasswordResetEmail } from "../services/emailService";
+import { env } from "../config/env";
+import BlackListedToken from "../models/BlackListedToken";
 
 // Generate JWT token
 const generateToken = (id: string): string => {
   return jwt.sign({ id }, env.JWT_SECRET, {
-    expiresIn: '30d',
+    expiresIn: "30d",
   });
 };
 
@@ -27,7 +27,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const userExists = await User.findOne({ email });
 
     if (userExists) {
-      res.status(400).json({ success: false, message: 'User already exists' });
+      res.status(400).json({ success: false, message: "User already exists" });
       return;
     }
 
@@ -54,38 +54,42 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     res.status(200).json({
       success: true,
-      message: 'Registration initiated. Please verify your email with the OTP sent.',
+      message:
+        "Registration initiated. Please verify your email with the OTP sent.",
       userId: user._id,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Server error",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
 
 // Verify OTP after registration
-export const verifyRegistrationOtp = async (req: Request, res: Response): Promise<void> => {
+export const verifyRegistrationOtp = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { userId, otp } = req.body;
 
     const user = await User.findById(userId);
 
     if (!user) {
-      res.status(404).json({ success: false, message: 'User not found' });
+      res.status(404).json({ success: false, message: "User not found" });
       return;
     }
 
     if (user.otpCode !== otp) {
-      res.status(400).json({ success: false, message: 'Invalid OTP' });
+      res.status(400).json({ success: false, message: "Invalid OTP" });
       return;
     }
 
     if (user.otpExpiry && user.otpExpiry < new Date()) {
-      res.status(400).json({ success: false, message: 'OTP expired' });
+      res.status(400).json({ success: false, message: "OTP expired" });
       return;
     }
 
@@ -111,8 +115,8 @@ export const verifyRegistrationOtp = async (req: Request, res: Response): Promis
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Server error",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
@@ -123,10 +127,10 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body;
 
     // Check if user exists
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
-      res.status(401).json({ success: false, message: 'Invalid credentials' });
+      res.status(401).json({ success: false, message: "Invalid credentials" });
       return;
     }
 
@@ -134,7 +138,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
-      res.status(401).json({ success: false, message: 'Invalid credentials' });
+      res.status(401).json({ success: false, message: "Invalid credentials" });
       return;
     }
 
@@ -153,38 +157,41 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     res.status(200).json({
       success: true,
-      message: '2FA OTP has been sent to your email',
+      message: "2FA OTP has been sent to your email",
       userId: user._id,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Server error",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
 
 // Verify OTP after login (2FA)
-export const verifyLoginOtp = async (req: Request, res: Response): Promise<void> => {
+export const verifyLoginOtp = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { userId, otp } = req.body;
 
     const user = await User.findById(userId);
 
     if (!user) {
-      res.status(404).json({ success: false, message: 'User not found' });
+      res.status(404).json({ success: false, message: "User not found" });
       return;
     }
 
     if (user.otpCode !== otp) {
-      res.status(400).json({ success: false, message: 'Invalid OTP' });
+      res.status(400).json({ success: false, message: "Invalid OTP" });
       return;
     }
 
     if (user.otpExpiry && user.otpExpiry < new Date()) {
-      res.status(400).json({ success: false, message: 'OTP expired' });
+      res.status(400).json({ success: false, message: "OTP expired" });
       return;
     }
 
@@ -209,32 +216,35 @@ export const verifyLoginOtp = async (req: Request, res: Response): Promise<void>
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Server error",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
 
 // Forgot password
-export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+export const forgotPassword = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { email } = req.body;
 
     const user = await User.findOne({ email });
 
     if (!user) {
-      res.status(404).json({ success: false, message: 'User not found' });
+      res.status(404).json({ success: false, message: "User not found" });
       return;
     }
 
     // Generate reset token
-    const resetToken = crypto.randomBytes(20).toString('hex');
+    const resetToken = crypto.randomBytes(20).toString("hex");
 
     // Hash token and set to resetPasswordToken field
     user.resetPasswordToken = crypto
-      .createHash('sha256')
+      .createHash("sha256")
       .update(resetToken)
-      .digest('hex');
+      .digest("hex");
 
     // Set expire
     const resetExpiry = new Date();
@@ -251,7 +261,7 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
 
       res.status(200).json({
         success: true,
-        message: 'Password reset link sent to email',
+        message: "Password reset link sent to email",
       });
     } catch (error) {
       user.resetPasswordToken = undefined;
@@ -261,35 +271,44 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
 
       res.status(500).json({
         success: false,
-        message: 'Email could not be sent',
+        message: "Email could not be sent",
       });
     }
   } catch (error) {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Server error",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
 
 // Reset password
-export const resetPassword = async (req: Request, res: Response): Promise<void> => {
+export const resetPassword = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     // Get hashed token
     const resetPasswordToken = crypto
-      .createHash('sha256')
+      .createHash("sha256")
       .update(req.params.resetToken)
-      .digest('hex');
+      .digest("hex");
+
+    // Debug log to troubleshoot token issues
+    console.log("Attempting to reset password with token:", resetPasswordToken);
 
     const user = await User.findOne({
       resetPasswordToken,
-      resetPasswordExpiry: { $gt: Date.now() },
+      resetPasswordExpiry: { $gt: new Date() }, // Use new Date() instead of Date.now()
     });
 
     if (!user) {
-      res.status(400).json({ success: false, message: 'Invalid or expired token' });
+      console.log("Invalid or expired token, no user found");
+      res
+        .status(400)
+        .json({ success: false, message: "Invalid or expired token" });
       return;
     }
 
@@ -301,14 +320,14 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
 
     res.status(200).json({
       success: true,
-      message: 'Password updated successfully',
+      message: "Password updated successfully",
     });
   } catch (error) {
-    console.error(error);
+    console.error("Reset password error:", error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Server error",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
@@ -319,7 +338,7 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
     const user = await User.findById((req as any).user.id);
 
     if (!user) {
-      res.status(404).json({ success: false, message: 'User not found' });
+      res.status(404).json({ success: false, message: "User not found" });
       return;
     }
 
@@ -335,8 +354,131 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Server error",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Logout user
+export const logout = async (req: Request, res: Response) => {
+  try {
+    // Get token from request (assuming it's extracted in auth middleware)
+    const authHeader = req.headers.authorization;
+
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+
+      // Add token to blacklist with expiry time (use same expiry as your JWT)
+      await BlackListedToken.create({
+        token,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days or match your JWT expiry
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+export const updateProfile = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { name } = req.body;
+    const userId = (req as any).user.id;
+
+    // Find user by ID
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    // Update user
+    user.name = name;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+export const updatePassword = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = (req as any).user.id;
+
+    // Validate inputs
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({
+        success: false,
+        message: "Current and new password are required",
+      });
+      return;
+    }
+
+    // Find user
+    const user = await User.findById(userId).select("+password");
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    // Check if current password is correct
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      res.status(401).json({
+        success: false,
+        message: "Current password is incorrect",
+      });
+      return;
+    }
+
+    // Set new password
+    user.password = newPassword;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password updated successfully",
+    });
+  } catch (error) {
+    console.error("Update password error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
     });
   }
 };
