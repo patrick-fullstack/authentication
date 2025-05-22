@@ -1,7 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 // Define which paths are protected and which are public
 // const protectedPaths = ["/dashboard"];
+// Comment out authPaths since it's not used
+/* 
 const authPaths = [
   "/login",
   "/register",
@@ -10,20 +12,21 @@ const authPaths = [
   "/reset-password",
   "/edit-profile",
 ];
+*/
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+export function middleware() {
+  // Comment out pathname since it's not used
+  // const { pathname } = request.nextUrl;
   // const token = request.cookies.get("token")?.value;
 
-  // // Check if path is one that should be protected
-  // const isProtectedPath = protectedPaths.some((path) =>
-  //   pathname.startsWith(path)
-  // );
-
+  // Since we're not using isAuthPath, we can safely remove this code
+  // or comment it out to keep it for future reference
+  /* 
   // Check if path is an auth path (login, register, etc)
   const isAuthPath = authPaths.some(
     (path) => pathname === path || pathname.startsWith(path)
   );
+  */
 
   // // If user is not logged in and tries to access protected route, redirect to login
   // if (isProtectedPath && !token) {
@@ -36,6 +39,7 @@ export function middleware(request: NextRequest) {
   //   return NextResponse.redirect(new URL("/dashboard", request.url));
   // }
 
+  // For now, just pass through all requests
   return NextResponse.next();
 }
 
