@@ -38,7 +38,7 @@ export default function RegisterForm() {
       setLoading(true);
       await registerUser(data.name, data.email, data.password);
     } catch (error) {
-      // Error is handled in the auth context
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -56,7 +56,7 @@ export default function RegisterForm() {
             placeholder="Full name"
             {...register('name')}
           />
-          
+
           <Input
             id="email"
             type="email"
@@ -65,7 +65,7 @@ export default function RegisterForm() {
             placeholder="Email address"
             {...register('email')}
           />
-          
+
           <Input
             id="password"
             type="password"
@@ -74,7 +74,7 @@ export default function RegisterForm() {
             placeholder="Password"
             {...register('password')}
           />
-          
+
           <Input
             id="confirmPassword"
             type="password"

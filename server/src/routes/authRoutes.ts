@@ -1,4 +1,4 @@
-import express from 'express';
+import express from "express";
 import {
   register,
   verifyRegistrationOtp,
@@ -7,37 +7,51 @@ import {
   forgotPassword,
   resetPassword,
   getMe,
-} from '../controllers/authController';
+  logout,
+} from "../controllers/authController";
 import {
   registerValidation,
   loginValidation,
   resetPasswordValidation,
   otpValidation,
   validate,
-} from '../middleware/validation';
-import { protect } from '../middleware/auth';
+} from "../middleware/validation";
+import { protect } from "../middleware/auth";
 
 const router = express.Router();
 
 // Register user
-router.post('/register', registerValidation, validate, register);
+router.post("/register", registerValidation, validate, register);
 
 // Verify registration OTP - update route path
-router.post('/verify-registration', otpValidation, validate, verifyRegistrationOtp);
+router.post(
+  "/verify-registration",
+  otpValidation,
+  validate,
+  verifyRegistrationOtp
+);
+
+// Logout
+router.post("/logout", protect, logout);
 
 // Login user
-router.post('/login', loginValidation, validate, login);
+router.post("/login", loginValidation, validate, login);
 
 // Verify login OTP (2FA) - update route path
-router.post('/verify-login', otpValidation, validate, verifyLoginOtp);
+router.post("/verify-login", otpValidation, validate, verifyLoginOtp);
 
 // Forgot password
-router.post('/forgot-password', forgotPassword);
+router.post("/forgot-password", forgotPassword);
 
 // Reset password
-router.post('/reset-password/:resetToken', resetPasswordValidation, validate, resetPassword);
+router.post(
+  "/reset-password/:resetToken",
+  resetPasswordValidation,
+  validate,
+  resetPassword
+);
 
 // Get current user
-router.get('/me', protect, getMe);
+router.get("/me", protect, getMe);
 
 export default router;

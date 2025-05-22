@@ -1,15 +1,14 @@
 'use client';
 
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { createContext, useEffect, ReactNode } from 'react';
+import { useAuthStore } from '@/store/authStore';
 import { User } from '@/types/auth';
-import api from '@/services/api';
-import { toast } from 'react-toastify';
-import Cookies from 'js-cookie';
+import { useRouter } from 'next/navigation';
 
+// Keep the same interface to maintain compatibility
 interface AuthContextType {
   user: User | null;
-  loading: boolean;
+  loading: boolean; // maps to isLoading in Zustand
   tempUserId: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
@@ -23,128 +22,112 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [tempUserId, setTempUserId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Use the Zustand store instead of local state
+  const {
+    user,
+    isLoading,
+    tempUserId,
+    token,
+    login: zustandLogin,
+    register: zustandRegister,
+    verifyOtp: zustandVerifyOtp,
+    forgotPassword: zustandForgotPassword,
+    resetPassword: zustandResetPassword,
+    logout: zustandLogout,
+    checkAuth,
+  } = useAuthStore();
+
   const router = useRouter();
 
-  // Check if endpoints need to be updated based on server routes
-  const REGISTRATION_VERIFY_ENDPOINT = '/auth/verify-registration';
-  const LOGIN_VERIFY_ENDPOINT = '/auth/verify-login';
-
+  // Check auth status on component mount
   useEffect(() => {
-    // Check if user is logged in
-    const checkAuth = async () => {
-      const token = Cookies.get('token');
-      if (token) {
-        try {
-          const { data } = await api.get('/auth/me');
-          if (data.success && data.user) {
-            setUser(data.user);
-          }
-        } catch (error) {
-          Cookies.remove('token');
-        }
-      }
-      setLoading(false);
-    };
-    
-    checkAuth();
-  }, []);
+    if (token) {
+      checkAuth();
+    }
+  }, [token, checkAuth]);
 
+  // Create wrapper methods that match the original Context API
+
+  // Login with router navigation
   const login = async (email: string, password: string) => {
     try {
-      const { data } = await api.post('/auth/login', { email, password });
-      if (data.success && data.userId) {
-        setTempUserId(data.userId);
-        toast.success('OTP sent to your email');
+      await zustandLogin(email, password);
+      // If successful, we'll have a tempUserId
+      if (useAuthStore.getState().tempUserId) {
         router.push('/verify-otp?mode=login');
       }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Login failed');
+    } catch (error) {
+      // Error is already handled in Zustand store
       throw error;
     }
   };
 
+  // Register with router navigation
   const register = async (name: string, email: string, password: string) => {
     try {
-      const { data } = await api.post('/auth/register', { name, email, password });
-      if (data.success && data.userId) {
-        setTempUserId(data.userId);
-        toast.success('OTP sent to your email');
+      await zustandRegister(name, email, password);
+      // If successful, we'll have a tempUserId
+      if (useAuthStore.getState().tempUserId) {
         router.push('/verify-otp?mode=register');
       }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Registration failed');
+    } catch (error) {
+      // Error is already handled in Zustand store
       throw error;
     }
   };
 
+  // Verify OTP with router navigation
   const verifyOtp = async (otp: string, isRegistration: boolean) => {
     try {
-      if (!tempUserId) {
-        toast.error('Session expired');
-        router.push(isRegistration ? '/register' : '/login');
-        return;
-      }
-
-      // Update endpoint to match server routes
-      const endpoint = isRegistration ? REGISTRATION_VERIFY_ENDPOINT : LOGIN_VERIFY_ENDPOINT;
-      const { data } = await api.post(endpoint, { userId: tempUserId, otp });
-
-      if (data.success && data.token) {
-        // Store token in cookie instead of localStorage
-        Cookies.set('token', data.token, { expires: 30, path: '/' });
-        setUser(data.user);
-        setTempUserId(null);
-        toast.success(isRegistration ? 'Registration successful!' : 'Login successful!');
-        
-        // Use router.replace for better navigation
+      await zustandVerifyOtp(otp, isRegistration);
+      // If successful, we'll be authenticated
+      if (useAuthStore.getState().isAuthenticated) {
         router.replace('/dashboard');
       }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'OTP verification failed');
+    } catch (error) {
+      // Error is already handled in Zustand store
       throw error;
     }
   };
 
+  // Forgot password with router navigation
   const forgotPassword = async (email: string) => {
     try {
-      const { data } = await api.post('/auth/forgot-password', { email });
-      if (data.success) {
-        toast.success('Password reset link sent to your email');
-        router.push('/login');
-      }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Request failed');
+      await zustandForgotPassword(email);
+      router.push('/login');
+    } catch (error) {
+      // Error is already handled in Zustand store
       throw error;
     }
   };
 
+  // Reset password with router navigation
   const resetPassword = async (token: string, password: string) => {
     try {
-      const { data } = await api.post(`/auth/reset-password/${token}`, { password });
-      if (data.success) {
-        toast.success('Password reset successful');
-        router.push('/login');
-      }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Password reset failed');
+      await zustandResetPassword(token, password);
+      router.push('/login');
+    } catch (error) {
+      // Error is already handled in Zustand store
       throw error;
     }
   };
 
+  // Logout with router navigation
   const logout = () => {
-    Cookies.remove('token');
-    setUser(null);
+    zustandLogout();
     router.push('/login');
+  };
+
+  // Create a method to set tempUserId directly
+  const setTempUserId = (id: string | null) => {
+    useAuthStore.setState({ tempUserId: id });
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        loading,
+        loading: isLoading, // Map isLoading to loading for compatibility
         tempUserId,
         login,
         register,

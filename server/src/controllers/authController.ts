@@ -1,15 +1,14 @@
-import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
-import User from '../models/User';
-import { sendOtpEmail, sendPasswordResetEmail } from '../services/emailService';
-import { env } from '../config/env';
-
+import { Request, Response } from "express";
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import User from "../models/User";
+import { sendOtpEmail, sendPasswordResetEmail } from "../services/emailService";
+import { env } from "../config/env";
 
 // Generate JWT token
 const generateToken = (id: string): string => {
   return jwt.sign({ id }, env.JWT_SECRET, {
-    expiresIn: '30d',
+    expiresIn: "30d",
   });
 };
 
@@ -27,7 +26,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const userExists = await User.findOne({ email });
 
     if (userExists) {
-      res.status(400).json({ success: false, message: 'User already exists' });
+      res.status(400).json({ success: false, message: "User already exists" });
       return;
     }
 
@@ -54,38 +53,42 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     res.status(200).json({
       success: true,
-      message: 'Registration initiated. Please verify your email with the OTP sent.',
+      message:
+        "Registration initiated. Please verify your email with the OTP sent.",
       userId: user._id,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Server error",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
 
 // Verify OTP after registration
-export const verifyRegistrationOtp = async (req: Request, res: Response): Promise<void> => {
+export const verifyRegistrationOtp = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { userId, otp } = req.body;
 
     const user = await User.findById(userId);
 
     if (!user) {
-      res.status(404).json({ success: false, message: 'User not found' });
+      res.status(404).json({ success: false, message: "User not found" });
       return;
     }
 
     if (user.otpCode !== otp) {
-      res.status(400).json({ success: false, message: 'Invalid OTP' });
+      res.status(400).json({ success: false, message: "Invalid OTP" });
       return;
     }
 
     if (user.otpExpiry && user.otpExpiry < new Date()) {
-      res.status(400).json({ success: false, message: 'OTP expired' });
+      res.status(400).json({ success: false, message: "OTP expired" });
       return;
     }
 
@@ -111,8 +114,8 @@ export const verifyRegistrationOtp = async (req: Request, res: Response): Promis
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Server error",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
@@ -123,10 +126,10 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body;
 
     // Check if user exists
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
-      res.status(401).json({ success: false, message: 'Invalid credentials' });
+      res.status(401).json({ success: false, message: "Invalid credentials" });
       return;
     }
 
@@ -134,7 +137,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
-      res.status(401).json({ success: false, message: 'Invalid credentials' });
+      res.status(401).json({ success: false, message: "Invalid credentials" });
       return;
     }
 
@@ -153,38 +156,41 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     res.status(200).json({
       success: true,
-      message: '2FA OTP has been sent to your email',
+      message: "2FA OTP has been sent to your email",
       userId: user._id,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Server error",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
 
 // Verify OTP after login (2FA)
-export const verifyLoginOtp = async (req: Request, res: Response): Promise<void> => {
+export const verifyLoginOtp = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { userId, otp } = req.body;
 
     const user = await User.findById(userId);
 
     if (!user) {
-      res.status(404).json({ success: false, message: 'User not found' });
+      res.status(404).json({ success: false, message: "User not found" });
       return;
     }
 
     if (user.otpCode !== otp) {
-      res.status(400).json({ success: false, message: 'Invalid OTP' });
+      res.status(400).json({ success: false, message: "Invalid OTP" });
       return;
     }
 
     if (user.otpExpiry && user.otpExpiry < new Date()) {
-      res.status(400).json({ success: false, message: 'OTP expired' });
+      res.status(400).json({ success: false, message: "OTP expired" });
       return;
     }
 
@@ -209,32 +215,35 @@ export const verifyLoginOtp = async (req: Request, res: Response): Promise<void>
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Server error",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
 
 // Forgot password
-export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+export const forgotPassword = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { email } = req.body;
 
     const user = await User.findOne({ email });
 
     if (!user) {
-      res.status(404).json({ success: false, message: 'User not found' });
+      res.status(404).json({ success: false, message: "User not found" });
       return;
     }
 
     // Generate reset token
-    const resetToken = crypto.randomBytes(20).toString('hex');
+    const resetToken = crypto.randomBytes(20).toString("hex");
 
     // Hash token and set to resetPasswordToken field
     user.resetPasswordToken = crypto
-      .createHash('sha256')
+      .createHash("sha256")
       .update(resetToken)
-      .digest('hex');
+      .digest("hex");
 
     // Set expire
     const resetExpiry = new Date();
@@ -251,7 +260,7 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
 
       res.status(200).json({
         success: true,
-        message: 'Password reset link sent to email',
+        message: "Password reset link sent to email",
       });
     } catch (error) {
       user.resetPasswordToken = undefined;
@@ -261,27 +270,30 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
 
       res.status(500).json({
         success: false,
-        message: 'Email could not be sent',
+        message: "Email could not be sent",
       });
     }
   } catch (error) {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Server error",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
 
 // Reset password
-export const resetPassword = async (req: Request, res: Response): Promise<void> => {
+export const resetPassword = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     // Get hashed token
     const resetPasswordToken = crypto
-      .createHash('sha256')
+      .createHash("sha256")
       .update(req.params.resetToken)
-      .digest('hex');
+      .digest("hex");
 
     const user = await User.findOne({
       resetPasswordToken,
@@ -289,7 +301,9 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
     });
 
     if (!user) {
-      res.status(400).json({ success: false, message: 'Invalid or expired token' });
+      res
+        .status(400)
+        .json({ success: false, message: "Invalid or expired token" });
       return;
     }
 
@@ -301,14 +315,14 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
 
     res.status(200).json({
       success: true,
-      message: 'Password updated successfully',
+      message: "Password updated successfully",
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Server error",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
@@ -319,7 +333,7 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
     const user = await User.findById((req as any).user.id);
 
     if (!user) {
-      res.status(404).json({ success: false, message: 'User not found' });
+      res.status(404).json({ success: false, message: "User not found" });
       return;
     }
 
@@ -335,8 +349,26 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Server error",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Logout user
+export const logout = async (req: Request, res: Response) => {
+  try {
+    // You can add any server-side logout logic here
+    // For example, invalidating refresh tokens, etc.
+
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
     });
   }
 };

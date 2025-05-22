@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import Input from '../common/Input';
 import Button from '../common/Button';
@@ -27,6 +28,8 @@ type FormData = yup.InferType<typeof schema>;
 export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   const { resetPassword } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [resetComplete, setResetComplete] = useState(false);
+  const router = useRouter();
 
   const {
     register,
@@ -36,19 +39,53 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
     resolver: yupResolver(schema),
   });
 
+  // Prevent navigation back to this page after reset
+  useEffect(() => {
+    // Redirect to login if reset is complete
+    if (resetComplete) {
+      router.replace('/login?resetSuccess=true');
+    }
+
+    // Add browser level protection against refreshing/closing
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!resetComplete) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // Check if token is valid
+    if (!token) {
+      router.replace('/forgot-password');
+    }
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [token, resetComplete, router]);
+
   const onSubmit = async (data: FormData) => {
     try {
       setLoading(true);
       await resetPassword(token, data.password);
+
+      // Mark reset as complete
+      setResetComplete(true);
+
+      // Replace current route with login page
+      // This happens in the useEffect to ensure consistent behavior
     } catch (error) {
-      // Error is handled in auth context
+      console.error('Password reset failed:', error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Card 
+    <Card
       title="Reset Password"
       subtitle="Enter your new password"
     >
@@ -62,7 +99,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             placeholder="New password"
             {...register('password')}
           />
-          
+
           <Input
             id="confirmPassword"
             type="password"
@@ -75,11 +112,17 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
         <Button
           type="submit"
-          disabled={loading}
+          disabled={loading || resetComplete}
           fullWidth
         >
-          {loading ? 'Resetting...' : 'Reset Password'}
+          {loading ? 'Resetting...' : resetComplete ? 'Password Reset' : 'Reset Password'}
         </Button>
+
+        {resetComplete && (
+          <div className="text-center text-green-600 font-medium">
+            Password reset successful! Redirecting to login...
+          </div>
+        )}
       </form>
     </Card>
   );

@@ -35,14 +35,14 @@ export default function ForgotPasswordForm() {
       await forgotPassword(data.email);
       setEmailSent(true);
     } catch (error) {
-      // Error is handled in auth context
+      console.log(error)
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Card 
+    <Card
       title="Forgot Password"
       subtitle={emailSent
         ? 'Password reset link has been sent to your email'
@@ -66,7 +66,7 @@ export default function ForgotPasswordForm() {
           >
             {loading ? 'Sending...' : 'Send Reset Link'}
           </Button>
-          
+
           <div className="text-center">
             <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
               Back to Login
