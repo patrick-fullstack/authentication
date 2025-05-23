@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validate = exports.otpValidation = exports.resetPasswordValidation = exports.loginValidation = exports.registerValidation = void 0;
+exports.commentValidation = exports.postUpdateValidation = exports.postValidation = exports.validate = exports.otpValidation = exports.resetPasswordValidation = exports.loginValidation = exports.registerValidation = void 0;
 const express_validator_1 = require("express-validator");
 exports.registerValidation = [
     (0, express_validator_1.body)("name").notEmpty().withMessage("Name is required").trim().escape(),
@@ -57,3 +57,33 @@ const validate = (req, res, next) => {
     next();
 };
 exports.validate = validate;
+// POSTS
+// Post validation
+exports.postValidation = [
+    (0, express_validator_1.body)("title")
+        .trim()
+        .notEmpty()
+        .withMessage("Title is required")
+        .isLength({ max: 100 })
+        .withMessage("Title cannot be more than 100 characters"),
+    (0, express_validator_1.body)("content").trim().notEmpty().withMessage("Content is required"),
+];
+// For updates, make fields optional
+exports.postUpdateValidation = [
+    (0, express_validator_1.body)("title")
+        .optional()
+        .trim()
+        .notEmpty()
+        .withMessage("Title cannot be empty")
+        .isLength({ max: 100 })
+        .withMessage("Title cannot be more than 100 characters"),
+    (0, express_validator_1.body)("content")
+        .optional()
+        .trim()
+        .notEmpty()
+        .withMessage("Content cannot be empty"),
+];
+// Comment validation
+exports.commentValidation = [
+    (0, express_validator_1.body)("text").trim().notEmpty().withMessage("Comment text is required"),
+];
