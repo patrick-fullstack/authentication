@@ -52,7 +52,7 @@ const protect = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
                 message: "User not found",
             });
         }
-        // Add user to request
+        // Add user to request - use type assertion here
         req.user = user;
         // Store the token for potential blacklisting in logout
         req.token = token;
