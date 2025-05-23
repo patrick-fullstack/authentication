@@ -52,8 +52,8 @@ export default function Header() {
                 <Link
                   href="/dashboard"
                   className={`px-3 py-2 rounded-md text-sm font-medium ${isActivePath('/dashboard')
-                      ? 'text-indigo-600 dark:text-indigo-400'
-                      : 'text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white'
+                    ? 'text-indigo-600 dark:text-indigo-400'
+                    : 'text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white'
                     }`}
                 >
                   Dashboard
@@ -61,8 +61,8 @@ export default function Header() {
                 <Link
                   href="/posts"
                   className={`px-3 py-2 rounded-md text-sm font-medium ${isActivePath('/posts')
-                      ? 'text-indigo-600 dark:text-indigo-400'
-                      : 'text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white'
+                    ? 'text-indigo-600 dark:text-indigo-400'
+                    : 'text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white'
                     }`}
                 >
                   Posts
@@ -79,7 +79,7 @@ export default function Header() {
                   className="flex items-center space-x-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white focus:outline-none"
                 >
                   <div className="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-white">
-                    {user?.name?.charAt(0).toUpperCase() || 'U'}
+                    {user && user.name && typeof user.name === 'string' ? user.name.charAt(0).toUpperCase() : 'U'}
                   </div>
                   <span className="hidden md:inline">{user?.name || 'User'}</span>
                   <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -102,8 +102,8 @@ export default function Header() {
                         <Link
                           href="/dashboard"
                           className={`block px-4 py-2 text-sm ${isActivePath('/dashboard')
-                              ? 'text-indigo-600 dark:text-indigo-400'
-                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            ? 'text-indigo-600 dark:text-indigo-400'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                             }`}
                           onClick={() => setMenuOpen(false)}
                         >
@@ -112,8 +112,8 @@ export default function Header() {
                         <Link
                           href="/posts"
                           className={`block px-4 py-2 text-sm ${isActivePath('/posts')
-                              ? 'text-indigo-600 dark:text-indigo-400'
-                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            ? 'text-indigo-600 dark:text-indigo-400'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                             }`}
                           onClick={() => setMenuOpen(false)}
                         >

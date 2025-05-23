@@ -36,7 +36,9 @@ export default function CommentItem({ postId, comment }: CommentItemProps) {
             <div className="flex justify-between">
                 <div className="flex items-center space-x-2">
                     <div className="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-white">
-                        {comment.user.name.charAt(0).toUpperCase()}
+                        {comment.user && comment.user.name && typeof comment.user.name === 'string'
+                            ? comment.user.name.charAt(0).toUpperCase()
+                            : 'U'}
                     </div>
                     <div>
                         <div className="font-medium text-gray-800 dark:text-white">
