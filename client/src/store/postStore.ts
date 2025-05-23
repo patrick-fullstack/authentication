@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { toast } from 'react-toastify';
 import postService from '@/services/postService';
-import { Post, Comment } from '@/types/post';
+import { Post, Comment, User } from '@/types/post';
 import { AxiosError } from 'axios';
 
 interface PostState {
@@ -26,6 +26,11 @@ interface PostState {
   addComment: (postId: string, text: string) => Promise<Comment | null>;
   deleteComment: (postId: string, commentId: string) => Promise<boolean>;
   clearCurrentPost: () => void;
+
+  // Editor management actions
+  addEditor: (postId: string, email: string) => Promise<User[] | null>;
+  removeEditor: (postId: string, editorId: string) => Promise<boolean>;
+  fetchEditors: (postId: string) => Promise<User[] | null>;
 }
 
 export const usePostStore = create<PostState>((set, get) => ({
@@ -313,6 +318,117 @@ export const usePostStore = create<PostState>((set, get) => ({
       set({ error: errorMessage });
       toast.error(errorMessage);
       return false;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  // Add an editor to a post
+  addEditor: async (postId: string, email: string) => {
+    try {
+      set({ isLoading: true, error: null });
+      const response = await postService.addEditor(postId, email);
+      
+      if (response.success) {
+        // Update editors in currentPost 
+        const currentPost = get().currentPost;
+        if (currentPost && currentPost._id === postId) {
+          set({ 
+            currentPost: {
+              ...currentPost,
+              editors: response.data.editors
+            }
+          });
+        }
+        
+        // Update editors in posts array
+        const updatedPosts = get().posts.map(post => {
+          if (post._id === postId) {
+            return {
+              ...post,
+              editors: response.data.editors
+            };
+          }
+          return post;
+        });
+        
+        set({ posts: updatedPosts });
+        toast.success('Editor added successfully');
+        return response.data.editors;
+      }
+      return null;
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message: string }>;
+      const errorMessage = axiosError.response?.data?.message || 'Failed to add editor';
+      set({ error: errorMessage });
+      toast.error(errorMessage);
+      return null;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  // Remove an editor from a post
+  removeEditor: async (postId: string, editorId: string) => {
+    try {
+      set({ isLoading: true, error: null });
+      const response = await postService.removeEditor(postId, editorId);
+      
+      if (response.success) {
+        // Update editors in currentPost
+        const currentPost = get().currentPost;
+        if (currentPost && currentPost._id === postId) {
+          set({ 
+            currentPost: {
+              ...currentPost,
+              editors: response.data.editors
+            }
+          });
+        }
+        
+        // Update editors in posts array
+        const updatedPosts = get().posts.map(post => {
+          if (post._id === postId) {
+            return {
+              ...post,
+              editors: response.data.editors
+            };
+          }
+          return post;
+        });
+        
+        set({ posts: updatedPosts });
+        toast.success('Editor removed successfully');
+        return true;
+      }
+      return false;
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message: string }>;
+      const errorMessage = axiosError.response?.data?.message || 'Failed to remove editor';
+      set({ error: errorMessage });
+      toast.error(errorMessage);
+      return false;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  // Fetch editors for a post
+  fetchEditors: async (postId: string) => {
+    try {
+      set({ isLoading: true, error: null });
+      const response = await postService.getEditors(postId);
+      
+      if (response.success) {
+        return response.data.editors;
+      }
+      return null;
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message: string }>;
+      const errorMessage = axiosError.response?.data?.message || 'Failed to fetch editors';
+      set({ error: errorMessage });
+      toast.error(errorMessage);
+      return null;
     } finally {
       set({ isLoading: false });
     }

@@ -12,6 +12,7 @@ export interface IPost extends Document {
   title: string;
   content: string;
   author: mongoose.Types.ObjectId | IUser;
+   editors: mongoose.Types.ObjectId[];
   likes: mongoose.Types.ObjectId[];
   comments: IComment[];
   createdAt: Date;
@@ -36,6 +37,12 @@ const postSchema = new mongoose.Schema<IPost>(
       ref: "User",
       required: true,
     },
+    editors: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     likes: [
       {
         type: mongoose.Schema.Types.ObjectId,

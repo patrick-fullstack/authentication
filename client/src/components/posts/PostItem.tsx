@@ -18,7 +18,7 @@ export default function PostItem({ post, isDetailView = false }: PostItemProps) 
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [isLikeAnimating, setIsLikeAnimating] = useState(false);
-
+    
     useEffect(() => {
         setMounted(true);
     }, []);
@@ -27,7 +27,9 @@ export default function PostItem({ post, isDetailView = false }: PostItemProps) 
         return null;
     }
 
+    // Check for both author and editor status
     const isAuthor = user?.id === post.author._id;
+    const isEditor = post.editors?.some(editor => editor._id === user?.id);
     const isLiked = post.likes.includes(user?.id || '');
     const likeCount = post.likes.length;
     const commentCount = post.comments.length;
@@ -41,6 +43,9 @@ export default function PostItem({ post, isDetailView = false }: PostItemProps) 
     };
 
     const handleDelete = async () => {
+        // Only authors can delete posts
+        if (!isAuthor) return;
+        
         if (confirmDelete) {
             const success = await deletePost(post._id);
             if (success && !isDetailView) {
@@ -63,15 +68,32 @@ export default function PostItem({ post, isDetailView = false }: PostItemProps) 
                     {post.author.name?.charAt(0).toUpperCase() || 'U'}
                 </div>
                 <div className="ml-3 flex-1">
-                    <p className="font-semibold text-gray-800 dark:text-white text-sm">
-                        {post.author.name}
-                    </p>
+                    <div className="flex items-center">
+                        <p className="font-semibold text-gray-800 dark:text-white text-sm">
+                            {post.author.name}
+                        </p>
+                        
+                        {/* Show role badges */}
+                        {isAuthor && (
+                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full dark:bg-blue-900 dark:text-blue-100">
+                                Author
+                            </span>
+                        )}
+                        {isEditor && (
+                            <span className="ml-2 text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full dark:bg-purple-900 dark:text-purple-100">
+                                Editor
+                            </span>
+                        )}
+                    </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                         {formattedDate}
                     </p>
                 </div>
-                {isAuthor && (
+                
+                {/* Show actions for both authors and editors, but with different capabilities */}
+                {(isAuthor || isEditor) && (
                     <div className="flex space-x-1">
+                        {/* Both authors and editors can edit */}
                         <Link
                             href={`/posts/edit/${post._id}`}
                             className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
@@ -80,14 +102,31 @@ export default function PostItem({ post, isDetailView = false }: PostItemProps) 
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
                         </Link>
-                        <button
-                            onClick={handleDelete}
-                            className="p-1 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                        </button>
+                        
+                        {/* Only authors can delete */}
+                        {isAuthor && (
+                            <button
+                                onClick={handleDelete}
+                                className="p-1 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        )}
+                        
+                        {/* Only authors see manage editors button (when in detail view) */}
+                        {isAuthor && isDetailView && (
+                            <Link
+                                href={`/posts/${post._id}#editors`}
+                                className="p-1 text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-300"
+                                aria-label="Manage editors"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                            </Link>
+                        )}
                     </div>
                 )}
             </div>
@@ -126,6 +165,14 @@ export default function PostItem({ post, isDetailView = false }: PostItemProps) 
                     >
                         Read more
                     </Link>
+                )}
+                
+                {/* Show editors information */}
+                {post.editors && post.editors.length > 0 && (
+                    <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                        <span className="font-medium">Editors: </span> 
+                        {post.editors.length} {post.editors.length === 1 ? 'collaborator' : 'collaborators'}
+                    </div>
                 )}
             </div>
 

@@ -4,6 +4,7 @@ import {
   PostResponse,
   LikeResponse,
   CommentResponse,
+  EditorsResponse,
 } from "@/types/post";
 
 const postService = {
@@ -64,6 +65,24 @@ const postService = {
     commentId: string
   ): Promise<{ success: boolean; message: string }> => {
     const response = await api.delete(`/posts/${postId}/comments/${commentId}`);
+    return response.data;
+  },
+
+  // Add an editor to a post
+  addEditor: async (postId: string, email: string): Promise<EditorsResponse> => {
+    const response = await api.post(`/posts/${postId}/editors`, { email });
+    return response.data;
+  },
+
+  // Remove an editor from a post
+  removeEditor: async (postId: string, editorId: string): Promise<EditorsResponse> => {
+    const response = await api.delete(`/posts/${postId}/editors/${editorId}`);
+    return response.data;
+  },
+
+  // Get editors for a post
+  getEditors: async (postId: string): Promise<EditorsResponse> => {
+    const response = await api.get(`/posts/${postId}/editors`);
     return response.data;
   },
 };

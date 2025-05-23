@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Post from "../models/Post";
 import mongoose from "mongoose";
 import { AuthRequest } from "../middleware/auth";
+import User from "../models/User";
 
 // Get all posts (with authentication)
 export const getPosts = async (req: Request, res: Response): Promise<void> => {
@@ -18,6 +19,7 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
       .skip(skip)
       .limit(limit)
       .populate("author", "name")
+      .populate("editors", "name")
       .lean();
 
     const total = await Post.countDocuments();
@@ -49,6 +51,7 @@ export const getPost = async (req: Request, res: Response): Promise<void> => {
   try {
     const post = await Post.findById(req.params.id)
       .populate("author", "name")
+      .populate("editors", "name email")
       .populate("comments.user", "name")
       .lean();
 
@@ -119,8 +122,11 @@ export const updatePost = async (
       return;
     }
 
-    // Check if user is the author
-    if (post.author.toString() !== userId) {
+    // Check if user is the author or an editor
+    const isAuthor = post.author.toString() === userId;
+    const isEditor = post.editors.some((editorId) => editorId.toString() === userId);
+
+    if (!isAuthor && !isEditor) {
       res.status(403).json({
         success: false,
         message: "Not authorized to update this post",
@@ -331,6 +337,174 @@ export const deleteComment = async (
     });
   } catch (error) {
     console.error("Error deleting comment:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+  
+};
+
+export const addEditor = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const authReq = req as AuthRequest;
+    const { email } = req.body;
+    const postId = req.params.id;
+    const userId = authReq.user.id;
+
+    // Find post
+    const post = await Post.findById(postId);
+    if (!post) {
+      res.status(404).json({ success: false, message: "Post not found" });
+      return;
+    }
+
+    // Check if user is the author
+    if (post.author.toString() !== userId) {
+      res.status(403).json({
+        success: false,
+        message: "Only the post author can add editors",
+      });
+      return;
+    }
+
+    // Find user by email
+    const userToAdd = await User.findOne({ email });
+    if (!userToAdd) {
+      res.status(404).json({ success: false, message: "User not found" });
+      return;
+    }
+
+    // Check if user is already an editor
+    if (post.editors.some((editorId) => editorId.toString() === userToAdd._id.toString())) {
+      res.status(400).json({ 
+        success: false, 
+        message: "This user is already an editor for this post" 
+      });
+      return;
+    }
+
+    // Check if user is the author (can't be both author and editor)
+    if (post.author.toString() === userToAdd._id.toString()) {
+      res.status(400).json({ 
+        success: false, 
+        message: "The author cannot be added as an editor" 
+      });
+      return;
+    }
+
+    // Add user to editors
+    post.editors.push(userToAdd._id);
+    await post.save();
+
+    // Return the updated post with populated editors
+    const updatedPost = await Post.findById(postId)
+      .populate("editors", "name email")
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      message: "Editor added successfully",
+      data: { 
+        editors: updatedPost?.editors 
+      },
+    });
+  } catch (error) {
+    console.error("Error adding editor:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Remove an editor from a post (authenticated, author only)
+export const removeEditor = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const authReq = req as AuthRequest;
+    const { editorId } = req.params;
+    const postId = req.params.id;
+    const userId = authReq.user.id;
+
+    // Find post
+    const post = await Post.findById(postId);
+    if (!post) {
+      res.status(404).json({ success: false, message: "Post not found" });
+      return;
+    }
+
+    // Check if user is the author
+    if (post.author.toString() !== userId) {
+      res.status(403).json({
+        success: false,
+        message: "Only the post author can remove editors",
+      });
+      return;
+    }
+
+    // Check if editor exists
+    if (!post.editors.some((id) => id.toString() === editorId)) {
+      res.status(404).json({ 
+        success: false, 
+        message: "Editor not found for this post" 
+      });
+      return;
+    }
+
+    // Remove editor
+    post.editors = post.editors.filter((id) => id.toString() !== editorId);
+    await post.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Editor removed successfully",
+      data: { 
+        editors: post.editors 
+      },
+    });
+  } catch (error) {
+    console.error("Error removing editor:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Get all editors for a post
+export const getEditors = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const postId = req.params.id;
+
+    const post = await Post.findById(postId)
+      .populate("editors", "name email")
+      .lean();
+
+    if (!post) {
+      res.status(404).json({ success: false, message: "Post not found" });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: { 
+        editors: post.editors 
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching editors:", error);
     res.status(500).json({
       success: false,
       message: "Server error",

@@ -21,6 +21,12 @@ const postSchema = new mongoose_1.default.Schema({
         ref: "User",
         required: true,
     },
+    editors: [
+        {
+            type: mongoose_1.default.Schema.Types.ObjectId,
+            ref: "User",
+        },
+    ],
     likes: [
         {
             type: mongoose_1.default.Schema.Types.ObjectId,

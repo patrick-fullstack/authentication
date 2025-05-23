@@ -8,6 +8,9 @@ import {
   likePost,
   addComment,
   deleteComment,
+  addEditor,
+  removeEditor,
+  getEditors,
 } from "../controllers/postController";
 import { protect } from "../middleware/auth";
 import {
@@ -15,34 +18,28 @@ import {
   postUpdateValidation,
   commentValidation,
   validate,
+  editorValidation,
 } from "../middleware/validation";
 
 const router = express.Router();
 
-// All routes require authentication
-// Get all posts
+// Base routes
 router.get("/", protect, getPosts);
-
-// Get a single post
-router.get("/:id", protect, getPost);
-
-// Create a post
 router.post("/", protect, postValidation, validate, createPost);
-
-// Update a post
+router.get("/:id", protect, getPost);
 router.put("/:id", protect, postUpdateValidation, validate, updatePost);
-
-// Delete a post
 router.delete("/:id", protect, deletePost);
 
-// Like/unlike a post
+// Like/unlike
 router.put("/:id/like", protect, likePost);
 
-// Comment routes
-// Add a comment to a post
+// Comments
 router.post("/:id/comments", protect, commentValidation, validate, addComment);
+router.delete("/:id/comments/:commentId", protect, deleteComment);
 
-// Delete a comment
-router.delete("/:postId/comments/:commentId", protect, deleteComment);
+// Editor management
+router.post("/:id/editors", protect, editorValidation, validate, addEditor);
+router.delete("/:id/editors/:editorId", protect, removeEditor);
+router.get("/:id/editors", protect, getEditors);
 
 export default router;

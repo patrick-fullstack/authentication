@@ -1,4 +1,5 @@
 'use client';
+
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -8,6 +9,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import PostItem from '@/components/posts/PostItem';
 import CommentForm from '@/components/posts/CommentForm';
 import CommentItem from '@/components/posts/CommentItem';
+import EditorManagement from '@/components/posts/EditorManagement';
 
 interface PostDetailPageProps {
     params: Promise<{ id: string }>;
@@ -75,6 +77,9 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
         );
     }
 
+    // Check if current user is the author of the post
+    const isAuthor = user?.id === currentPost?.author._id;
+
     return (
         <div className="max-w-xl mx-auto px-4 py-8 pb-20 md:pb-10">
             <div className="mb-6">
@@ -92,6 +97,16 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
             {currentPost && (
                 <>
                     <PostItem post={currentPost} isDetailView />
+
+                    {/* Editor Management Section */}
+                    {isAuthor && (
+                        <div id="editors" className="mt-6">
+                            <EditorManagement
+                                postId={id}
+                                postAuthorId={currentPost.author._id}
+                            />
+                        </div>
+                    )}
 
                     <div className="mt-6">
                         <h2 className="text-lg font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-4">

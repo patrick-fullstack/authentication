@@ -102,3 +102,12 @@ export const postUpdateValidation = [
 export const commentValidation = [
   body("text").trim().notEmpty().withMessage("Comment text is required"),
 ];
+
+export const editorValidation = [
+  body("email")
+    .trim()
+    .notEmpty()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Please enter a valid email address"),
+];

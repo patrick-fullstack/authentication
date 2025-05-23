@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.commentValidation = exports.postUpdateValidation = exports.postValidation = exports.validate = exports.otpValidation = exports.resetPasswordValidation = exports.loginValidation = exports.registerValidation = void 0;
+exports.editorValidation = exports.commentValidation = exports.postUpdateValidation = exports.postValidation = exports.validate = exports.otpValidation = exports.resetPasswordValidation = exports.loginValidation = exports.registerValidation = void 0;
 const express_validator_1 = require("express-validator");
 exports.registerValidation = [
     (0, express_validator_1.body)("name").notEmpty().withMessage("Name is required").trim().escape(),
@@ -86,4 +86,12 @@ exports.postUpdateValidation = [
 // Comment validation
 exports.commentValidation = [
     (0, express_validator_1.body)("text").trim().notEmpty().withMessage("Comment text is required"),
+];
+exports.editorValidation = [
+    (0, express_validator_1.body)("email")
+        .trim()
+        .notEmpty()
+        .withMessage("Email is required")
+        .isEmail()
+        .withMessage("Please enter a valid email address"),
 ];

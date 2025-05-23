@@ -18,10 +18,55 @@ export interface Post {
   title: string;
   content: string;
   author: User;
+   editors: User[];
   likes: string[];
   comments: Comment[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PostsResponse {
+  success: boolean;
+  data: {
+    posts: Post[];
+    pagination: {
+      total: number;
+      page: number;
+      pages: number;
+      limit: number;
+    };
+  };
+}
+
+export interface PostResponse {
+  success: boolean;
+  data: {
+    post: Post;
+  };
+}
+
+export interface LikeResponse {
+  success: boolean;
+  message: string;
+  data: {
+    likes: number;
+    isLiked: boolean;
+  };
+}
+
+export interface CommentResponse {
+  success: boolean;
+  message: string;
+  data: {
+    comment: Comment;
+  };
+}
+
+export interface EditorsResponse {
+  success: boolean;
+  data: {
+    editors: User[];
+  };
 }
 
 export interface PostsResponse {
