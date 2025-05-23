@@ -3,7 +3,11 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 
-export default function UserProfile() {
+interface UserProfileProps {
+  hideEditButton?: boolean;
+}
+
+export default function UserProfile({ hideEditButton }: UserProfileProps) {
   const { user } = useAuth();
   const router = useRouter();
 
@@ -12,7 +16,7 @@ export default function UserProfile() {
   }
 
   const handleEditProfile = () => {
-    router.push('/edit-profile');
+    router.push('/account-settings');
   };
 
   return (
@@ -36,14 +40,16 @@ export default function UserProfile() {
         </div>
       </div>
 
-      <div className="mt-6 flex justify-end">
-        <button
-          onClick={handleEditProfile}
-          className="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-4 py-2 rounded-md text-sm font-medium transition-colors"
-        >
-          Edit Profile
-        </button>
-      </div>
+      {!hideEditButton && (
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={handleEditProfile}
+            className="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+          >
+            Edit Profile
+          </button>
+        </div>
+      )}
     </div>
   );
 }

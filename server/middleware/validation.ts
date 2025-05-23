@@ -67,3 +67,38 @@ export const validate = (
   }
   next();
 };
+
+// POSTS
+// Post validation
+export const postValidation = [
+  body("title")
+    .trim()
+    .notEmpty()
+    .withMessage("Title is required")
+    .isLength({ max: 100 })
+    .withMessage("Title cannot be more than 100 characters"),
+
+  body("content").trim().notEmpty().withMessage("Content is required"),
+];
+
+// For updates, make fields optional
+export const postUpdateValidation = [
+  body("title")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("Title cannot be empty")
+    .isLength({ max: 100 })
+    .withMessage("Title cannot be more than 100 characters"),
+
+  body("content")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("Content cannot be empty"),
+];
+
+// Comment validation
+export const commentValidation = [
+  body("text").trim().notEmpty().withMessage("Comment text is required"),
+];
