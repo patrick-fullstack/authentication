@@ -9,6 +9,19 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import 'react-toastify/dist/ReactToastify.css';
 import './globals.css';
 
+// Title mapping for different paths
+const pageTitles: Record<string, string> = {
+  '/': 'Welcome | Social Network',
+  '/login': 'Sign In | Social Network',
+  '/register': 'Create Account | Social Network',
+  '/dashboard': 'Your Dashboard | Social Network',
+  '/posts': 'Posts | Social Network',
+  '/posts/create': 'Create Post | Social Network',
+  '/account-settings': 'Account Settings | Social Network',
+  '/forgot-password': 'Reset Password | Social Network',
+  '/verify-otp': 'Verify Account | Social Network',
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -20,8 +33,20 @@ export default function RootLayout({
   const isAuthPage = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-otp']
     .some(path => pathname === path || pathname.startsWith(path));
 
+  // Get title based on current path or use a default
+  const pageTitle = pageTitles[pathname] || 'Social Network';
+
   return (
     <html lang="en">
+      <head>
+        <title>{pageTitle}</title>
+        <meta name="description" content="Share your thoughts and connect with friends on Social Network" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content="Share your thoughts and connect with friends on Social Network" />
+        <meta property="og:type" content="website" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" />
+      </head>
       <body className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-500">
         {/* Wrap everything with AuthProvider */}
         <AuthProvider>
