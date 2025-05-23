@@ -6,8 +6,8 @@ import BlackListedToken from "../models/BlackListedToken";
 import { IUser } from "../models/User";
 
 // Extend the Express Request interface
-interface AuthRequest extends Request {
-  user?: IUser;
+export interface AuthRequest extends Request {
+  user: IUser & { id: string };
   token?: string;
 }
 
@@ -17,7 +17,7 @@ interface JwtPayload {
 
 // Protect routes
 export const protect = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -63,11 +63,11 @@ export const protect = async (
       });
     }
 
-    // Add user to request
-    req.user = user;
+    // Add user to request - use type assertion here
+    (req as AuthRequest).user = user as IUser & { id: string };
 
     // Store the token for potential blacklisting in logout
-    req.token = token;
+    (req as AuthRequest).token = token;
 
     next();
   } catch (error) {

@@ -9,16 +9,17 @@ import { env } from "./config/env";
 import connectDB from "./config/db";
 import authRoutes from "./routes/authRoutes";
 import mongoose from "mongoose";
+import postRoutes from "./routes/postRoutes";
 
 // Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  console.error('UNCAUGHT EXCEPTION:', err);
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT EXCEPTION:", err);
   // Don't exit in serverless environment
 });
 
 // Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  console.error('UNHANDLED REJECTION:', err);
+process.on("unhandledRejection", (err) => {
+  console.error("UNHANDLED REJECTION:", err);
   // Don't exit in serverless environment
 });
 
@@ -28,7 +29,7 @@ connectDB();
 const app = express();
 
 // Trust proxy for proper IP detection behind Vercel's infrastructure
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 
 // Request logging
 if (env.NODE_ENV === "development") {
@@ -117,7 +118,10 @@ app.use(mongoSanitize());
 // Force HTTPS in production
 if (env.NODE_ENV === "production") {
   app.use((req, res, next) => {
-    if (req.header("x-forwarded-proto") !== "https" && req.hostname !== 'localhost') {
+    if (
+      req.header("x-forwarded-proto") !== "https" &&
+      req.hostname !== "localhost"
+    ) {
       res.redirect(`https://${req.header("host")}${req.url}`);
     } else {
       next();
@@ -126,16 +130,22 @@ if (env.NODE_ENV === "production") {
 }
 
 // Enable CORS with enhanced security
-const corsOptions ={
-    origin: [
-    'http://localhost:3000',
-    'https://authentication-client-mu.vercel.app',
-    'https://authentication-client.vercel.app'
-  ],
-    credentials:true,
-    optionSuccessStatus:200
-}
+const corsOptions = {
+  origin:
+    env.NODE_ENV === "development"
+      ? ["http://localhost:3000"]
+      : [
+          "http://localhost:3000",
+          "https://authentication-client-mu.vercel.app",
+          "https://authentication-client.vercel.app",
+        ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 200,
+};
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 // Secure cookie settings (for when you use cookies for auth)
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -165,58 +175,69 @@ app.get("/api/debug-cors", (req, res) => {
     message: "CORS is working correctly",
     timestamp: new Date().toISOString(),
     headers: {
-      "Access-Control-Allow-Origin": res.getHeader("Access-Control-Allow-Origin"),
-      "Access-Control-Allow-Methods": res.getHeader("Access-Control-Allow-Methods"),
-      "Access-Control-Allow-Headers": res.getHeader("Access-Control-Allow-Headers"),
-      "Access-Control-Allow-Credentials": res.getHeader("Access-Control-Allow-Credentials")
+      "Access-Control-Allow-Origin": res.getHeader(
+        "Access-Control-Allow-Origin"
+      ),
+      "Access-Control-Allow-Methods": res.getHeader(
+        "Access-Control-Allow-Methods"
+      ),
+      "Access-Control-Allow-Headers": res.getHeader(
+        "Access-Control-Allow-Headers"
+      ),
+      "Access-Control-Allow-Credentials": res.getHeader(
+        "Access-Control-Allow-Credentials"
+      ),
     },
     environment: {
       NODE_ENV: env.NODE_ENV,
-      CLIENT_URL: env.CLIENT_URL
+      CLIENT_URL: env.CLIENT_URL,
     },
     request: {
       origin: req.headers.origin,
-      referer: req.headers.referer
-    }
+      referer: req.headers.referer,
+    },
   });
 });
 
 // Debug route to check server status
-app.get('/api/system/status', async (req, res) => {
+app.get("/api/system/status", async (req, res) => {
   try {
     // Check MongoDB connection
-    const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
-    
+    const dbStatus =
+      mongoose.connection.readyState === 1 ? "connected" : "disconnected";
+
     // Check environment variables (mask sensitive data)
     const envCheck = {
       NODE_ENV: env.NODE_ENV,
-      JWT_SECRET: env.JWT_SECRET ? 'Set' : 'Not set',
-      MONGO_URI: env.MONGO_URI ? 'Set' : 'Not set',
-      EMAIL_CONFIG: env.EMAIL_HOST && env.EMAIL_USERNAME ? 'Set' : 'Not set',
+      JWT_SECRET: env.JWT_SECRET ? "Set" : "Not set",
+      MONGO_URI: env.MONGO_URI ? "Set" : "Not set",
+      EMAIL_CONFIG: env.EMAIL_HOST && env.EMAIL_USERNAME ? "Set" : "Not set",
     };
-    
+
     res.json({
-      status: 'operational',
+      status: "operational",
       time: new Date().toISOString(),
       environment: env.NODE_ENV,
       database: dbStatus,
-      config: envCheck
+      config: envCheck,
     });
   } catch (error: unknown) {
     // Fix: properly type the error
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     const errorStack = error instanceof Error ? error.stack : undefined;
-    
+
     res.status(500).json({
-      status: 'error',
+      status: "error",
       message: errorMessage,
-      stack: env.NODE_ENV === 'production' ? null : errorStack
+      stack: env.NODE_ENV === "production" ? null : errorStack,
     });
   }
 });
 
 // Mount routes
 app.use("/api/auth", authRoutes);
+app.use("/api/posts", postRoutes);
 
 // Default route
 app.get("/", (req, res) => {
@@ -246,7 +267,7 @@ app.use(
 );
 
 // Only start server when running locally, not on Vercel
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== "production") {
   app.listen(env.PORT, () => console.log(`Server running on port ${env.PORT}`));
 }
 

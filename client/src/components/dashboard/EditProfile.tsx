@@ -46,9 +46,14 @@ const passwordSchema = yup.object({
 type ProfileFormData = yup.InferType<typeof profileSchema>;
 type PasswordFormData = yup.InferType<typeof passwordSchema>;
 
-export default function EditProfile() {
+interface EditProfileProps {
+    initialTab?: 'profile' | 'password';
+    hideProfileTab?: boolean;
+}
+
+export default function EditProfile({ initialTab = 'profile', hideProfileTab = false }: EditProfileProps) {
     const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
+    const [activeTab, setActiveTab] = useState<'profile' | 'password'>(initialTab);
     const [isUpdating, setIsUpdating] = useState(false);
     const [serverError, setServerError] = useState<string | null>(null);
     const { updateProfile: updateProfileStore, updatePassword: updatePasswordStore } = useAuthStore();
@@ -134,31 +139,30 @@ export default function EditProfile() {
 
     return (
         <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Edit Profile</h1>
-
-            {/* Tabs */}
-            <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
-                <button
-                    className={`py-2 px-4 text-sm font-medium ${activeTab === 'profile'
-                        ? 'border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                        }`}
-                    onClick={() => setActiveTab('profile')}
-                    type="button"
-                >
-                    Profile Information
-                </button>
-                <button
-                    className={`py-2 px-4 text-sm font-medium ${activeTab === 'password'
-                        ? 'border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                        }`}
-                    onClick={() => setActiveTab('password')}
-                    type="button"
-                >
-                    Change Password
-                </button>
-            </div>
+            {!hideProfileTab && (
+                <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+                    <button
+                        className={`py-2 px-4 text-sm font-medium ${activeTab === 'profile'
+                            ? 'border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                            : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                            }`}
+                        onClick={() => setActiveTab('profile')}
+                        type="button"
+                    >
+                        Profile Information
+                    </button>
+                    <button
+                        className={`py-2 px-4 text-sm font-medium ${activeTab === 'password'
+                            ? 'border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                            : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                            }`}
+                        onClick={() => setActiveTab('password')}
+                        type="button"
+                    >
+                        Change Password
+                    </button>
+                </div>
+            )}
 
             {/* Server error message */}
             {serverError && (
@@ -168,7 +172,7 @@ export default function EditProfile() {
             )}
 
             {/* Profile Form */}
-            {activeTab === 'profile' && (
+            {activeTab === 'profile' && !hideProfileTab && (
                 <form onSubmit={handleProfileSubmit(handleUpdateProfile)} className="space-y-6">
                     <div className="space-y-4">
                         <Input
@@ -207,7 +211,7 @@ export default function EditProfile() {
             )}
 
             {/* Password Form */}
-            {activeTab === 'password' && (
+            {(activeTab === 'password' || hideProfileTab) && (
                 <form onSubmit={handlePasswordSubmit(handleUpdatePassword)} className="space-y-6">
                     <div className="space-y-4">
                         <Input
