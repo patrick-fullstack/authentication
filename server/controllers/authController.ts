@@ -8,9 +8,7 @@ import BlackListedToken from "../models/BlackListedToken";
 
 // Generate JWT token
 const generateToken = (id: string): string => {
-  return jwt.sign({ id }, env.JWT_SECRET, {
-    expiresIn: "30d",
-  });
+  return jwt.sign({ id }, env.JWT_SECRET);
 };
 
 // Generate 6-digit OTP

@@ -2,7 +2,6 @@
 import { use } from 'react';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EditPostForm from '@/components/posts/EditPostForm';
@@ -37,12 +36,6 @@ export default function EditPostPage({ params }: EditPostPageProps) {
     return (
         <div className="max-w-3xl mx-auto px-4 py-8">
             <div className="mb-6">
-                <Link
-                    href={`/posts/${id}`}
-                    className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
-                >
-                    &larr; Back to Post
-                </Link>
             </div>
 
             <EditPostForm postId={id} />

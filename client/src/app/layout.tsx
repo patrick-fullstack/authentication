@@ -22,7 +22,7 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body className="flex flex-col min-h-screen">
+      <body className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-500">
         {/* Wrap everything with AuthProvider */}
         <AuthProvider>
           {/* Initialize auth on app load */}
@@ -31,13 +31,18 @@ export default function RootLayout({
           {/* Only show header when not on auth pages */}
           {!isAuthPage && <Header />}
 
-          {/* Main content with different styling based on page type */}
-          <main className={`flex-grow flex items-center justify-center ${isAuthPage ? 'bg-gradient-to-br from-indigo-500 to-purple-700 py-12' : 'bg-gray-50 dark:bg-gray-900 py-8'
+          {/* Main content */}
+          <main className={`flex-grow ${isAuthPage
+            ? 'bg-gradient-to-br from-pink-500 to-purple-700 py-12 flex items-center justify-center'
+            : 'pt-6'
             } px-4 sm:px-6 lg:px-8`}>
-            <div className={isAuthPage ? 'w-full max-w-md' : 'w-full max-w-7xl'}>
+            <div className={isAuthPage ? 'w-full max-w-md' : 'w-full max-w-5xl mx-auto'}>
               {children}
             </div>
           </main>
+
+          {/* Add padding for mobile bottom nav */}
+          <div className="md:hidden h-16"></div>
 
           {/* Only show footer when not on auth pages */}
           {!isAuthPage && <Footer />}
