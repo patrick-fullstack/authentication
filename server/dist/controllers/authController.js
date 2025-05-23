@@ -21,9 +21,7 @@ const env_1 = require("../config/env");
 const BlackListedToken_1 = __importDefault(require("../models/BlackListedToken"));
 // Generate JWT token
 const generateToken = (id) => {
-    return jsonwebtoken_1.default.sign({ id }, env_1.env.JWT_SECRET, {
-        expiresIn: "30d",
-    });
+    return jsonwebtoken_1.default.sign({ id }, env_1.env.JWT_SECRET);
 };
 // Generate 6-digit OTP
 const generateOTP = () => {

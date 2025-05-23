@@ -9,6 +9,19 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import 'react-toastify/dist/ReactToastify.css';
 import './globals.css';
 
+// Title mapping for different paths
+const pageTitles: Record<string, string> = {
+  '/': 'Welcome | Social Network',
+  '/login': 'Sign In | Social Network',
+  '/register': 'Create Account | Social Network',
+  '/dashboard': 'Your Dashboard | Social Network',
+  '/posts': 'Posts | Social Network',
+  '/posts/create': 'Create Post | Social Network',
+  '/account-settings': 'Account Settings | Social Network',
+  '/forgot-password': 'Reset Password | Social Network',
+  '/verify-otp': 'Verify Account | Social Network',
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -20,9 +33,21 @@ export default function RootLayout({
   const isAuthPage = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-otp']
     .some(path => pathname === path || pathname.startsWith(path));
 
+  // Get title based on current path or use a default
+  const pageTitle = pageTitles[pathname] || 'Social Network';
+
   return (
     <html lang="en">
-      <body className="flex flex-col min-h-screen">
+      <head>
+        <title>{pageTitle}</title>
+        <meta name="description" content="Share your thoughts and connect with friends on Social Network" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content="Share your thoughts and connect with friends on Social Network" />
+        <meta property="og:type" content="website" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" />
+      </head>
+      <body className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-500">
         {/* Wrap everything with AuthProvider */}
         <AuthProvider>
           {/* Initialize auth on app load */}
@@ -31,13 +56,18 @@ export default function RootLayout({
           {/* Only show header when not on auth pages */}
           {!isAuthPage && <Header />}
 
-          {/* Main content with different styling based on page type */}
-          <main className={`flex-grow flex items-center justify-center ${isAuthPage ? 'bg-gradient-to-br from-indigo-500 to-purple-700 py-12' : 'bg-gray-50 dark:bg-gray-900 py-8'
+          {/* Main content */}
+          <main className={`flex-grow ${isAuthPage
+            ? 'bg-gradient-to-br from-pink-500 to-purple-700 py-12 flex items-center justify-center'
+            : 'pt-6'
             } px-4 sm:px-6 lg:px-8`}>
-            <div className={isAuthPage ? 'w-full max-w-md' : 'w-full max-w-7xl'}>
+            <div className={isAuthPage ? 'w-full max-w-md' : 'w-full max-w-5xl mx-auto'}>
               {children}
             </div>
           </main>
+
+          {/* Add padding for mobile bottom nav */}
+          <div className="md:hidden h-16"></div>
 
           {/* Only show footer when not on auth pages */}
           {!isAuthPage && <Footer />}

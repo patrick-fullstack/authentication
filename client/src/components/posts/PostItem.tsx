@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { useAuthStore } from '@/store/authStore';
@@ -16,6 +16,16 @@ export default function PostItem({ post, isDetailView = false }: PostItemProps) 
     const { user } = useAuthStore();
     const { likePost, deletePost } = usePostStore();
     const [confirmDelete, setConfirmDelete] = useState(false);
+    const [mounted, setMounted] = useState(false);
+    const [isLikeAnimating, setIsLikeAnimating] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) {
+        return null;
+    }
 
     const isAuthor = user?.id === post.author._id;
     const isLiked = post.likes.includes(user?.id || '');
@@ -23,14 +33,17 @@ export default function PostItem({ post, isDetailView = false }: PostItemProps) 
     const commentCount = post.comments.length;
 
     const handleLike = async () => {
-        await likePost(post._id);
+        if (!isLikeAnimating) {
+            setIsLikeAnimating(true);
+            await likePost(post._id);
+            setTimeout(() => setIsLikeAnimating(false), 1000);
+        }
     };
 
     const handleDelete = async () => {
         if (confirmDelete) {
             const success = await deletePost(post._id);
             if (success && !isDetailView) {
-                // If we're in the feed view, no need to navigate
                 setConfirmDelete(false);
             }
         } else {
@@ -43,95 +56,151 @@ export default function PostItem({ post, isDetailView = false }: PostItemProps) 
         : '';
 
     return (
-        <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden border border-gray-100 dark:border-gray-700">
             {/* Post Header */}
-            <div className="flex justify-between items-start mb-4">
-                <div>
-                    <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
-                        {isDetailView ? (
-                            post.title
-                        ) : (
-                            <Link href={`/posts/${post._id}`} className="hover:text-indigo-600 dark:hover:text-indigo-400">
-                                {post.title}
-                            </Link>
-                        )}
-                    </h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Posted by {post.author.name} • {formattedDate}
+            <div className="flex items-center p-4 border-b border-gray-100 dark:border-gray-700">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white">
+                    {post.author.name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <div className="ml-3 flex-1">
+                    <p className="font-semibold text-gray-800 dark:text-white text-sm">
+                        {post.author.name}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {formattedDate}
                     </p>
                 </div>
-
                 {isAuthor && (
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-1">
                         <Link
                             href={`/posts/edit/${post._id}`}
-                            className="text-sm text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
+                            className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                         >
-                            Edit
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
                         </Link>
                         <button
                             onClick={handleDelete}
-                            className={`text-sm ${confirmDelete ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400'}`}
+                            className="p-1 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
                         >
-                            {confirmDelete ? 'Confirm Delete' : 'Delete'}
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
                         </button>
-                        {confirmDelete && (
-                            <button
-                                onClick={() => setConfirmDelete(false)}
-                                className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-                            >
-                                Cancel
-                            </button>
-                        )}
                     </div>
                 )}
             </div>
 
+            {/* Post Title */}
+            <div className="px-4 pt-3">
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
+                    {isDetailView ? (
+                        post.title
+                    ) : (
+                        <Link href={`/posts/${post._id}`} className="hover:text-pink-500 dark:hover:text-pink-400">
+                            {post.title}
+                        </Link>
+                    )}
+                </h2>
+            </div>
+
             {/* Post Content */}
-            <div className="mb-4">
+            <div className="p-4">
                 {isDetailView ? (
                     <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                         {post.content}
                     </div>
                 ) : (
                     <div className="text-gray-700 dark:text-gray-300">
-                        {post.content.length > 200
-                            ? `${post.content.substring(0, 200)}...`
+                        {post.content.length > 150
+                            ? `${post.content.substring(0, 150)}...`
                             : post.content}
                     </div>
+                )}
+
+                {!isDetailView && post.content.length > 150 && (
+                    <Link
+                        href={`/posts/${post._id}`}
+                        className="inline-block mt-2 text-sm text-pink-500 hover:text-pink-600 dark:text-pink-400 dark:hover:text-pink-300"
+                    >
+                        Read more
+                    </Link>
                 )}
             </div>
 
             {/* Post Actions */}
-            <div className="flex items-center justify-between text-gray-500 dark:text-gray-400 text-sm">
-                <div className="flex space-x-4">
-                    <button
-                        onClick={handleLike}
-                        className={`flex items-center space-x-1 ${isLiked ? 'text-indigo-600 dark:text-indigo-400' : ''}`}
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                        </svg>
-                        <span>{likeCount} {likeCount === 1 ? 'Like' : 'Likes'}</span>
-                    </button>
+            <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-700">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                        <button
+                            onClick={handleLike}
+                            className="flex items-center space-x-1 group"
+                            aria-label={isLiked ? "Unlike post" : "Like post"}
+                        >
+                            <div className={`relative transition-transform ${isLikeAnimating ? 'scale-125' : ''}`}>
+                                {isLiked ? (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-pink-500" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                                    </svg>
+                                ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 group-hover:text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                    </svg>
+                                )}
+                            </div>
+                            <span className={isLiked ? 'text-pink-500' : ''}>
+                                {likeCount > 0 ? likeCount : ''}
+                            </span>
+                        </button>
+
+                        {isDetailView ? (
+                            <div className="flex items-center space-x-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                                <span>{commentCount}</span>
+                            </div>
+                        ) : (
+                            <Link href={`/posts/${post._id}`} className="flex items-center space-x-1 group">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 group-hover:text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                                <span>{commentCount}</span>
+                            </Link>
+                        )}
+                    </div>
 
                     {!isDetailView && (
-                        <Link href={`/posts/${post._id}`} className="flex items-center space-x-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                            <span>{commentCount} {commentCount === 1 ? 'Comment' : 'Comments'}</span>
+                        <Link
+                            href={`/posts/${post._id}`}
+                            className="text-sm font-medium text-pink-500 hover:text-pink-600 dark:text-pink-400 dark:hover:text-pink-300"
+                            aria-label="View post details"
+                        >
+                            View
                         </Link>
                     )}
                 </div>
 
-                {!isDetailView && (
-                    <Link
-                        href={`/posts/${post._id}`}
-                        className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
-                    >
-                        Read more
-                    </Link>
+                {/* Delete Confirmation */}
+                {confirmDelete && (
+                    <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-sm">
+                        <p className="text-red-700 dark:text-red-400 mb-2">Are you sure you want to delete this post?</p>
+                        <div className="flex space-x-2 justify-end">
+                            <button
+                                onClick={() => setConfirmDelete(false)}
+                                className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDelete}
+                                className="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
                 )}
             </div>
         </div>
