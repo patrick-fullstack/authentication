@@ -3,22 +3,36 @@
 import { useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/services/api';
+import Cookies from 'js-cookie';
 
 export default function AuthInitializer() {
     const { token, checkAuth } = useAuthStore();
 
     useEffect(() => {
-        // Set auth header and cookie on app initialization if token exists
-        if (token) {
-            // Set the Authorization header
-            api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        // Only run this once on component mount
+        const initAuth = async () => {
+            // Get token directly from cookie as a fallback
+            const tokenFromCookie = Cookies.get("token");
 
-            // Set or refresh the token cookie to ensure middleware can access it
-            document.cookie = `token=${token}; path=/; max-age=2592000; SameSite=Strict`;
+            // If we have a token (either from store or cookie), set it in headers
+            const authToken = token || tokenFromCookie;
 
-            checkAuth();
-        }
-    }, [token, checkAuth]);
+            if (authToken) {
+                api.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
+
+                // If token was only in cookie but not in store, we need to restore it
+                if (!token && tokenFromCookie) {
+
+                }
+            }
+
+            // Then verify with the server
+            await checkAuth();
+        };
+
+        initAuth();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Empty dependency array - only run once
 
     return null;
 }

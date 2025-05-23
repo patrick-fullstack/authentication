@@ -3,6 +3,38 @@ import { persist } from "zustand/middleware";
 import api from "@/services/api";
 import { toast } from "react-toastify";
 import { AxiosError } from "axios";
+import Cookies from "js-cookie";
+import { createJSONStorage } from "zustand/middleware";
+import { StateStorage } from "zustand/middleware";
+
+const cookieStorage: StateStorage = {
+  getItem: (name: string) => {
+    const cookie = Cookies.get(name);
+    if (cookie) {
+      return cookie;
+    }
+    return null;
+  },
+  setItem: (name: string, value: string) => {
+    try {
+      // Parse the value to get rememberSession
+      const { state } = JSON.parse(value);
+
+      // Set cookie with appropriate expiration
+      const expires = state.rememberSession ? 30 : undefined; // 30 days or session cookie
+      Cookies.set(name, value, {
+        expires: expires,
+        path: "/",
+        sameSite: "strict",
+      });
+    } catch (error) {
+      console.error("Error saving to cookie storage:", error);
+    }
+  },
+  removeItem: (name: string) => {
+    Cookies.remove(name, { path: "/" });
+  },
+};
 
 interface User {
   id: string;
@@ -102,8 +134,8 @@ export const useAuthStore = create<AuthState>()(
       },
 
       verifyOtp: async (otp, isRegistration = false) => {
+        set({ isLoading: true });
         try {
-          set({ isLoading: true });
           const tempUserId = get().tempUserId;
 
           if (!tempUserId) {
@@ -121,29 +153,30 @@ export const useAuthStore = create<AuthState>()(
             otp,
           });
 
-          if (data.success && data.token) {
-            // Store token in Zustand
-            set({
-              token: data.token,
-              user: data.user,
-              isAuthenticated: true,
-              tempUserId: null,
-            });
+          // Set token in API headers
+          api.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
 
-            // Update Authorization header for future requests
-            api.defaults.headers.common[
-              "Authorization"
-            ] = `Bearer ${data.token}`;
+          // Set authentication token cookie
+          // This is separate from the Zustand state cookie
+          const expires = get().rememberSession ? 30 : undefined; // days or session cookie
+          Cookies.set("token", data.token, {
+            expires: expires,
+            path: "/",
+            sameSite: "strict",
+          });
 
-            // ADD THIS: Set token as a cookie that middleware can access
-            document.cookie = `token=${data.token}; path=/; max-age=2592000; SameSite=Strict`;
+          // Set in Zustand state
+          set({
+            token: data.token,
+            user: data.user,
+            isAuthenticated: true,
+            tempUserId: null,
+          });
 
-            toast.success(
-              isRegistration ? "Registration successful!" : "Login successful!"
-            );
-            return true;
-          }
-          return false;
+          toast.success(
+            isRegistration ? "Registration successful!" : "Login successful!"
+          );
+          return true;
         } catch (error) {
           const axiosError = error as AxiosError<ApiErrorResponse>;
           toast.error(
@@ -151,6 +184,8 @@ export const useAuthStore = create<AuthState>()(
               (isRegistration ? "Registration failed" : "Login failed")
           );
           throw error;
+        } finally {
+          set({ isLoading: false });
         }
       },
 
@@ -174,9 +209,9 @@ export const useAuthStore = create<AuthState>()(
           // Remove Authorization header
           delete api.defaults.headers.common["Authorization"];
 
-          // IMPORTANT: Clear the token cookie for middleware
-          document.cookie =
-            "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+          // Remove all auth cookies
+          Cookies.remove("token", { path: "/" });
+          Cookies.remove("auth-storage", { path: "/" });
 
           set({ isLoading: false });
         }
@@ -319,11 +354,14 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "auth-storage",
+      storage: createJSONStorage(() => cookieStorage),
 
+      // Store everything regardless of rememberSession
+      // The expiration handling is done in the cookie storage
       partialize: (state) => ({
-        token: state.rememberSession ? state.token : null,
-        user: state.rememberSession ? state.user : null,
-        isAuthenticated: state.rememberSession ? state.isAuthenticated : false,
+        token: state.token,
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
         rememberSession: state.rememberSession,
       }),
     }
