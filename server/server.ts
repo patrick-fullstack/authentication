@@ -131,15 +131,21 @@ if (env.NODE_ENV === "production") {
 
 // Enable CORS with enhanced security
 const corsOptions = {
-  origin: [
-    "http://localhost:3000",
-    "https://authentication-client-mu.vercel.app",
-    "https://authentication-client.vercel.app",
-  ],
+  origin:
+    env.NODE_ENV === "development"
+      ? ["http://localhost:3000"]
+      : [
+          "http://localhost:3000",
+          "https://authentication-client-mu.vercel.app",
+          "https://authentication-client.vercel.app",
+        ],
   credentials: true,
-  optionSuccessStatus: 200,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 // Secure cookie settings (for when you use cookies for auth)
 app.use((req: Request, res: Response, next: NextFunction) => {

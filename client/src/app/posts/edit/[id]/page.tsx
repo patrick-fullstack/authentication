@@ -1,5 +1,5 @@
 'use client';
-
+import { use } from 'react';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -8,13 +8,11 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EditPostForm from '@/components/posts/EditPostForm';
 
 interface EditPostPageProps {
-    params: {
-        id: string;
-    };
+    params: Promise<{ id: string }>;
 }
 
 export default function EditPostPage({ params }: EditPostPageProps) {
-    const { id } = params;
+    const { id } = use(params);
     const { user, isLoading } = useAuth();
     const router = useRouter();
 

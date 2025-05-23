@@ -1,5 +1,5 @@
 'use client';
-
+import { use } from 'react';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -11,13 +11,11 @@ import CommentForm from '@/components/posts/CommentForm';
 import CommentItem from '@/components/posts/CommentItem';
 
 interface PostDetailPageProps {
-    params: {
-        id: string;
-    };
+    params: Promise<{ id: string }>;
 }
 
 export default function PostDetailPage({ params }: PostDetailPageProps) {
-    const { id } = params;
+    const { id } = use(params);
     const { user, isLoading: authLoading } = useAuth();
     const { fetchPost, currentPost, isLoading, clearCurrentPost } = usePostStore();
     const router = useRouter();

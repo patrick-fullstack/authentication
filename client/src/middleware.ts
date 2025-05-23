@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // Define which paths are protected and which are auth paths
-const protectedPaths = ["/dashboard", "/edit-profile"];
+const protectedPaths = ["/dashboard", "/edit-profile", "/posts"];
 const authPaths = [
   "/login",
   "/register",
@@ -14,11 +14,11 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("token")?.value;
 
-  // Check if path is an auth path (login, register, etc)
-  const isAuthPath = authPaths.some(
-    (path) => pathname === path || pathname.startsWith(path)
-  );
+  // Check if path is exactly an auth path (not including sub-paths)
+  // This prevents redirects from sub-paths like /posts/123
+  const isExactAuthPath = authPaths.some((path) => pathname === path);
 
+  // Check if path is a protected path or starts with a protected path
   const isProtectedPath = protectedPaths.some(
     (path) => pathname === path || pathname.startsWith(path)
   );
@@ -29,8 +29,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // If user is logged in and tries to access auth route, redirect to dashboard
-  if (isAuthPath && token) {
+  // Only redirect from exact auth paths (not sub-paths)
+  // This allows you to stay on pages like /posts/123 when reloading
+  if (isExactAuthPath && token) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
