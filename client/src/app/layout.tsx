@@ -6,8 +6,10 @@ import Footer from '@/components/layout/Footer';
 import { usePathname } from 'next/navigation';
 import AuthInitializer from '@/components/auth/AuthInitializer';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import 'react-toastify/dist/ReactToastify.css';
 import './globals.css';
+import { Toaster } from '@/components/layout/Sonner';
 
 // Title mapping for different paths
 const pageTitles: Record<string, string> = {
@@ -37,7 +39,7 @@ export default function RootLayout({
   const pageTitle = pageTitles[pathname] || 'Social Network';
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning className="antialiased">
       <head>
         <title>{pageTitle}</title>
         <meta name="description" content="Share your thoughts and connect with friends on Social Network" />
@@ -47,43 +49,53 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-500">
+      <body className="min-h-screen flex flex-col">
         {/* Wrap everything with AuthProvider */}
         <AuthProvider>
-          {/* Initialize auth on app load */}
-          <AuthInitializer />
+          <ThemeProvider>
+            {/* Initialize auth on app load */}
+            <AuthInitializer />
 
-          {/* Only show header when not on auth pages */}
-          {!isAuthPage && <Header />}
+            {/* Only show header when not on auth pages */}
+            {!isAuthPage && <Header />}
 
-          {/* Main content */}
-          <main className={`flex-grow ${isAuthPage
-            ? 'bg-gradient-to-br from-pink-500 to-purple-700 py-12 flex items-center justify-center'
-            : 'pt-6'
-            } px-4 sm:px-6 lg:px-8`}>
-            <div className={isAuthPage ? 'w-full max-w-md' : 'w-full max-w-5xl mx-auto'}>
-              {children}
-            </div>
-          </main>
+            {/* Main content */}
+            {isAuthPage ? (
+              <div className="flex flex-col flex-grow bg-gradient-auth">
+                <main className="flex flex-grow items-center justify-center p-4 sm:p-8">
+                  <div className="w-full max-w-md">
+                    {children}
+                  </div>
+                </main>
+              </div>
+            ) : (
+              <main className="flex-grow pt-6 px-4 sm:px-6 lg:px-8">
+                <div className="w-full max-w-5xl mx-auto">
+                  {children}
+                </div>
+              </main>
+            )}
 
-          {/* Add padding for mobile bottom nav */}
-          <div className="md:hidden h-16"></div>
+            {/* Add padding for mobile bottom nav only on non-auth pages */}
+            {!isAuthPage && <div className="md:hidden h-16"></div>}
 
-          {/* Only show footer when not on auth pages */}
-          {!isAuthPage && <Footer />}
+            {/* Only show footer when not on auth pages */}
+            {!isAuthPage && <Footer />}
 
-          <ToastContainer
-            position="top-right"
-            autoClose={5000}
-            hideProgressBar={false}
-            newestOnTop
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="light"
-          />
+            <ToastContainer
+              position="top-right"
+              autoClose={5000}
+              hideProgressBar={false}
+              newestOnTop
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="auto" // Respects the current theme setting
+            />
+            <Toaster />
+          </ThemeProvider>
         </AuthProvider>
       </body>
     </html>

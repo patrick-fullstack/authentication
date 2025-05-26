@@ -51,16 +51,16 @@ export default function DashboardPage() {
   return (
     <div className="max-w-xl mx-auto px-4 pb-20 md:pb-10">
       {/* User welcome card */}
-      <div className="mb-8 bg-gradient-to-r from-pink-100 to-purple-100 dark:from-pink-900/30 dark:to-purple-900/30 rounded-xl p-6 shadow-sm">
+      <div className="mb-8 bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl p-6 shadow-sm">
         <div className="flex items-center space-x-4">
-          <div className="h-16 w-16 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold">
+          <div className="h-16 w-16 rounded-full bg-gradient-to-br from-amber-700 to-orange-600 flex items-center justify-center text-white text-xl font-bold">
             {user.name?.charAt(0).toUpperCase() || 'U'}
           </div>
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold text-amber-800 dark:bg-gradient-to-r dark:from-amber-700 dark:to-orange-600 dark:bg-clip-text dark:text-transparent">
               Welcome back, {user.name || 'User'}
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-700 dark:text-gray-300">
               What is on your mind today?
             </p>
           </div>
@@ -69,12 +69,12 @@ export default function DashboardPage() {
         <div className="mt-6 flex space-x-3">
           <Link
             href="/posts/create"
-            className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full shadow-md hover:opacity-90"
+            className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-amber-700 to-orange-600 text-white rounded-full shadow-md hover:opacity-90"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="white">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            <span>Create New Post</span>
+            <span className="text-white">Create New Post</span>
           </Link>
         </div>
       </div>
@@ -82,12 +82,12 @@ export default function DashboardPage() {
       {/* Recent posts section */}
       <div>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
+          <h2 className="text-xl font-bold bg-gradient-to-r from-amber-700 to-orange-600 bg-clip-text text-transparent">
             Your Feed
           </h2>
           <Link
             href="/posts"
-            className="text-sm font-medium text-pink-500 hover:text-pink-600 dark:text-pink-400 dark:hover:text-pink-300"
+            className="text-sm font-medium text-amber-700 hover:text-amber-800 dark:text-amber-500 dark:hover:text-amber-400"
           >
             See all
           </Link>
@@ -109,7 +109,7 @@ export default function DashboardPage() {
                 </p>
                 <Link
                   href="/posts/create"
-                  className="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full hover:opacity-90"
+                  className="inline-block px-6 py-3 bg-gradient-to-r from-amber-700 to-orange-600 text-white rounded-full hover:opacity-90"
                 >
                   Create Your First Post
                 </Link>

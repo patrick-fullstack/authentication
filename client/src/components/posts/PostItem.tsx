@@ -18,7 +18,7 @@ export default function PostItem({ post, isDetailView = false }: PostItemProps) 
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [isLikeAnimating, setIsLikeAnimating] = useState(false);
-    
+
     useEffect(() => {
         setMounted(true);
     }, []);
@@ -45,7 +45,7 @@ export default function PostItem({ post, isDetailView = false }: PostItemProps) 
     const handleDelete = async () => {
         // Only authors can delete posts
         if (!isAuthor) return;
-        
+
         if (confirmDelete) {
             const success = await deletePost(post._id);
             if (success && !isDetailView) {
@@ -64,23 +64,33 @@ export default function PostItem({ post, isDetailView = false }: PostItemProps) 
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden border border-gray-100 dark:border-gray-700">
             {/* Post Header */}
             <div className="flex items-center p-4 border-b border-gray-100 dark:border-gray-700">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-amber-700 to-orange-600 flex items-center justify-center text-white">
                     {post.author.name?.charAt(0).toUpperCase() || 'U'}
                 </div>
                 <div className="ml-3 flex-1">
                     <div className="flex items-center">
-                        <p className="font-semibold text-gray-800 dark:text-white text-sm">
+                        <p className="font-semibold text-text-primary text-sm">
                             {post.author.name}
                         </p>
-                        
+
                         {/* Show role badges */}
                         {isAuthor && (
-                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full dark:bg-blue-900 dark:text-blue-100">
+                            <span className="ml-2 text-xs px-2 py-0.5 rounded-full"
+                                style={{
+                                    backgroundColor: 'var(--accent-color)',
+                                    color: 'var(--card-background)',
+                                    opacity: 0.9
+                                }}>
                                 Author
                             </span>
                         )}
                         {isEditor && (
-                            <span className="ml-2 text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full dark:bg-purple-900 dark:text-purple-100">
+                            <span className="ml-2 text-xs px-2 py-0.5 rounded-full"
+                                style={{
+                                    backgroundColor: 'var(--card-border)',
+                                    color: 'var(--text-primary)',
+                                    opacity: 0.9
+                                }}>
                                 Editor
                             </span>
                         )}
@@ -89,7 +99,7 @@ export default function PostItem({ post, isDetailView = false }: PostItemProps) 
                         {formattedDate}
                     </p>
                 </div>
-                
+
                 {/* Show actions for both authors and editors, but with different capabilities */}
                 {(isAuthor || isEditor) && (
                     <div className="flex space-x-1">
@@ -102,7 +112,7 @@ export default function PostItem({ post, isDetailView = false }: PostItemProps) 
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
                         </Link>
-                        
+
                         {/* Only authors can delete */}
                         {isAuthor && (
                             <button
@@ -114,7 +124,7 @@ export default function PostItem({ post, isDetailView = false }: PostItemProps) 
                                 </svg>
                             </button>
                         )}
-                        
+
                         {/* Only authors see manage editors button (when in detail view) */}
                         {isAuthor && isDetailView && (
                             <Link
@@ -137,7 +147,7 @@ export default function PostItem({ post, isDetailView = false }: PostItemProps) 
                     {isDetailView ? (
                         post.title
                     ) : (
-                        <Link href={`/posts/${post._id}`} className="hover:text-pink-500 dark:hover:text-pink-400">
+                        <Link href={`/posts/${post._id}`} className="hover:text-amber-700 dark:hover:text-amber-500">
                             {post.title}
                         </Link>
                     )}
@@ -161,16 +171,16 @@ export default function PostItem({ post, isDetailView = false }: PostItemProps) 
                 {!isDetailView && post.content.length > 150 && (
                     <Link
                         href={`/posts/${post._id}`}
-                        className="inline-block mt-2 text-sm text-pink-500 hover:text-pink-600 dark:text-pink-400 dark:hover:text-pink-300"
+                        className="inline-block mt-2 text-sm text-amber-700 hover:text-amber-800 dark:text-amber-500 dark:hover:text-amber-400"
                     >
                         Read more
                     </Link>
                 )}
-                
+
                 {/* Show editors information */}
                 {post.editors && post.editors.length > 0 && (
                     <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                        <span className="font-medium">Editors: </span> 
+                        <span className="font-medium">Editors: </span>
                         {post.editors.length} {post.editors.length === 1 ? 'collaborator' : 'collaborators'}
                     </div>
                 )}
@@ -187,16 +197,16 @@ export default function PostItem({ post, isDetailView = false }: PostItemProps) 
                         >
                             <div className={`relative transition-transform ${isLikeAnimating ? 'scale-125' : ''}`}>
                                 {isLiked ? (
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-pink-500" viewBox="0 0 20 20" fill="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-700" viewBox="0 0 20 20" fill="currentColor">
                                         <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
                                     </svg>
                                 ) : (
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 group-hover:text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 group-hover:text-amber-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                     </svg>
                                 )}
                             </div>
-                            <span className={isLiked ? 'text-pink-500' : ''}>
+                            <span className={isLiked ? 'text-amber-700' : ''}>
                                 {likeCount > 0 ? likeCount : ''}
                             </span>
                         </button>

@@ -55,9 +55,9 @@ export default function EditPostForm({ postId }: EditPostFormProps) {
 
     // Check if user is authorized to edit
     const isAuthor = user && currentPost && user.id === currentPost.author._id;
-const isEditor = user && currentPost && currentPost.editors && 
-                 Array.isArray(currentPost.editors) &&
-                 currentPost.editors.some(editor => editor._id === user.id);
+    const isEditor = user && currentPost && currentPost.editors &&
+        Array.isArray(currentPost.editors) &&
+        currentPost.editors.some(editor => editor._id === user.id);
     const canEdit = isAuthor || isEditor;
 
     useEffect(() => {
@@ -86,7 +86,7 @@ const isEditor = user && currentPost && currentPost.editors &&
     if (!mounted) {
         return (
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700 flex justify-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-pink-500"></div>
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-700"></div>
             </div>
         );
     }
@@ -142,11 +142,11 @@ const isEditor = user && currentPost && currentPost.editors &&
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
                 </Link>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">Edit Post</h1>
-                
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-700 to-orange-600 bg-clip-text text-transparent">Edit Post</h1>
+
                 {/* Show editor badge */}
                 {isEditor && !isAuthor && (
-                    <span className="ml-2 text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full dark:bg-purple-800 dark:text-purple-100">
+                    <span className="ml-2 text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full dark:bg-orange-800/30 dark:text-orange-300">
                         Editing as Editor
                     </span>
                 )}
@@ -160,7 +160,7 @@ const isEditor = user && currentPost && currentPost.editors &&
                     <input
                         id="title"
                         type="text"
-                        className="w-full px-4 py-3 text-gray-700 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 dark:bg-gray-800 dark:text-white dark:border-gray-700"
+                        className="w-full px-4 py-3 text-gray-700 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-gray-800 dark:text-white dark:border-gray-700"
                         placeholder="Enter post title"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
@@ -187,7 +187,7 @@ const isEditor = user && currentPost && currentPost.editors &&
                     <button
                         type="button"
                         onClick={() => router.back()}
-                        className="px-6 py-2 text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                        className="px-6 py-2 text-white bg-gray-100 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
                     >
                         Cancel
                     </button>
@@ -195,7 +195,7 @@ const isEditor = user && currentPost && currentPost.editors &&
                     <button
                         type="submit"
                         disabled={isLoading || !title.trim() || !content.trim()}
-                        className="px-6 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-6 py-2 bg-gradient-to-r from-amber-700 to-orange-600 text-white rounded-full hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isLoading ? 'Saving...' : 'Save Changes'}
                     </button>

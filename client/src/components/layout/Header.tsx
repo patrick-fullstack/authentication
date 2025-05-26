@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter, usePathname } from 'next/navigation';
+import ThemeToggle from '../common/ThemeToggle';
 
 export default function Header() {
   const { user, logout, isAuthenticated } = useAuthStore();
@@ -51,17 +52,17 @@ export default function Header() {
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link href={isAuthenticated ? "/dashboard" : "/"} className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-pink-500" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 116 0z" clipRule="evenodd" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-amber-700" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12,8L10.67,8.09C9.81,7.07 7.4,4.5 5,4.5C5,4.5 3.03,7.46 4.96,11.41C4.41,12.24 4.07,12.67 4,13.66L2.07,13.95L2.28,14.93L4.04,14.67L4.18,15.38L2.61,16.32L3.08,17.21L4.53,16.32C5.68,18.76 8.59,20 12,20C15.41,20 18.32,18.76 19.47,16.32L20.92,17.21L21.39,16.32L19.82,15.38L19.96,14.67L21.72,14.93L21.93,13.95L20,13.66C19.93,12.67 19.59,12.24 19.04,11.41C20.97,7.46 19,4.5 19,4.5C16.6,4.5 14.19,7.07 13.33,8.09L12,8z M9,11A1,1 0 0,1 10,12A1,1 0 0,1 9,13A1,1 0 0,1 8,12A1,1 0 0,1 9,11z M15,11A1,1 0 0,1 16,12A1,1 0 0,1 15,13A1,1 0 0,1 14,12A1,1 0 0,1 15,11z M12,7C12,7 13.33,5.57 14.67,5.57C15.99,5.57 17.35,9 12,9C6.65,9 8.01,5.57 9.33,5.57C10.67,5.57 12,7 12,7z" />
               </svg>
-              <span className="ml-2 text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">AuthGram</span>
+              <span className="ml-2 text-xl font-bold bg-gradient-to-r from-amber-700 to-orange-600 bg-clip-text text-transparent"></span>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
           {isAuthenticated && mounted && (
             <div className="hidden md:flex items-center space-x-4">
-              <Link href="/dashboard" className={`p-1 ${isActivePath('/dashboard') ? 'text-pink-500' : 'text-gray-700 dark:text-gray-300'}`}>
+              <Link href="/dashboard" className={`p-1 ${isActivePath('/dashboard') ? 'text-amber-700' : 'text-gray-700 dark:text-gray-300'}`}>
                 <div className="flex flex-col items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -69,7 +70,7 @@ export default function Header() {
                 </div>
               </Link>
 
-              <Link href="/posts" className={`p-1 ${isActivePath('/posts') ? 'text-pink-500' : 'text-gray-700 dark:text-gray-300'}`}>
+              <Link href="/posts" className={`p-1 ${isActivePath('/posts') ? 'text-amber-700' : 'text-gray-700 dark:text-gray-300'}`}>
                 <div className="flex flex-col items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
@@ -84,6 +85,8 @@ export default function Header() {
                   </svg>
                 </div>
               </Link>
+
+              <ThemeToggle />
             </div>
           )}
 
@@ -95,7 +98,7 @@ export default function Header() {
                   onClick={() => setMenuOpen(!menuOpen)}
                   className="flex items-center focus:outline-none"
                 >
-                  <div className="h-8 w-8 rounded-full ring-2 ring-pink-500 overflow-hidden flex items-center justify-center bg-gradient-to-br from-pink-500 to-purple-600 text-white">
+                  <div className="h-8 w-8 rounded-full ring-2 ring-amber-700 overflow-hidden flex items-center justify-center bg-gradient-to-br from-amber-700 to-orange-600 text-white">
                     {getUserInitial()}
                   </div>
                 </button>
@@ -103,8 +106,8 @@ export default function Header() {
                 {menuOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-gray-200 dark:border-gray-800 z-10 overflow-hidden">
                     <div className="p-3 border-b border-gray-200 dark:border-gray-800">
-                      <p className="font-medium text-gray-900 dark:text-white">{user?.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+                      <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{user?.name}</p>
+                      <p className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>{user?.email}</p>
                     </div>
 
                     <div className="py-1">
@@ -155,15 +158,17 @@ export default function Header() {
               </div>
             ) : (
               <div className="flex space-x-2">
+                <ThemeToggle />
+
                 <Link
                   href="/login"
-                  className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-pink-500 dark:text-gray-300 dark:hover:text-pink-400"
+                  className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-amber-700 dark:text-gray-300 dark:hover:text-amber-400"
                 >
                   Login
                 </Link>
                 <Link
                   href="/register"
-                  className="px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-pink-500 to-purple-600 rounded-full hover:opacity-90"
+                  className="px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-amber-700 to-orange-600 rounded-full hover:opacity-90"
                 >
                   Register
                 </Link>
@@ -173,33 +178,35 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile Navigation (Fixed Bottom Bar) */}
+      {/* Mobile Navigation */}
       {isAuthenticated && mounted && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 z-40">
           <div className="flex justify-around items-center h-16">
-            <Link href="/dashboard" className={`p-1 ${isActivePath('/dashboard') ? 'text-pink-500' : 'text-gray-700 dark:text-gray-300'}`}>
+            <Link href="/dashboard" className={isActivePath('/dashboard') ? 'text-amber-700' : 'text-gray-700 dark:text-gray-300'}>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
               </svg>
             </Link>
 
-            <Link href="/posts" className={`p-1 ${isActivePath('/posts') ? 'text-pink-500' : 'text-gray-700 dark:text-gray-300'}`}>
+            <Link href="/posts" className={isActivePath('/posts') ? 'text-amber-700' : 'text-gray-700 dark:text-gray-300'}>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
               </svg>
             </Link>
 
-            <Link href="/posts/create" className="p-1 text-gray-700 dark:text-gray-300">
+            <Link href="/posts/create" className="text-gray-700 dark:text-gray-300">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
             </Link>
 
-            <Link href="/account-settings" className={`p-1 ${isActivePath('/account-settings') ? 'text-pink-500' : 'text-gray-700 dark:text-gray-300'}`}>
+            <Link href="/account-settings" className={isActivePath('/account-settings') ? 'text-amber-700' : 'text-gray-700 dark:text-gray-300'}>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </Link>
+
+            <ThemeToggle />
           </div>
         </div>
       )}
