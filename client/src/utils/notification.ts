@@ -1,6 +1,5 @@
 import React from 'react';
-import { Notification } from '@/services/notificationService';
-
+import { Notification } from '@/types/notification';
 export const getNotificationText = (notification: Notification): string => {
   const senderName = notification.sender?.name || 'Someone';
   

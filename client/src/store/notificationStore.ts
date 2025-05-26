@@ -1,7 +1,8 @@
 import { create } from 'zustand';
-import notificationService, { Notification } from '@/services/notificationService';
+import notificationService from '@/services/notificationService';
 import { AxiosError } from 'axios';
 import { postToast } from '@/utils/toast';
+import { Notification } from '@/types/notification';
 
 interface NotificationState {
   notifications: Notification[];
@@ -29,6 +30,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   error: null,
 
   fetchNotifications: async (page = 1, limit = 20) => {
+    if (get().isLoading) return;
     try {
       set({ isLoading: true, error: null });
       const response = await notificationService.getNotifications(page, limit);
