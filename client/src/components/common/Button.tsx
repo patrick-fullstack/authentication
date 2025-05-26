@@ -20,16 +20,16 @@ export default function Button({
   fullWidth = false,
 }: ButtonProps) {
   const baseStyle = 'flex justify-center items-center py-2 px-4 border text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200';
-  
+
   const variantStyles = {
-    primary: 'bg-indigo-600 hover:bg-indigo-700 text-white border-transparent focus:ring-indigo-500',
+    primary: 'bg-gradient-to-r from-amber-700 to-orange-600 hover:opacity-90 text-white border-transparent focus:ring-amber-700',
     secondary: 'bg-gray-200 hover:bg-gray-300 text-gray-800 border-transparent focus:ring-gray-500',
     danger: 'bg-red-600 hover:bg-red-700 text-white border-transparent focus:ring-red-500',
   };
-  
+
   const disabledStyle = disabled ? 'opacity-50 cursor-not-allowed' : '';
   const widthClass = fullWidth ? 'w-full' : '';
-  
+
   return (
     <button
       type={type}

@@ -195,7 +195,7 @@ export default function EditProfile({ initialTab = 'profile', hideProfileTab = f
                     </button>
                     <button
                         className={`py-2 px-4 text-sm font-medium ${activeTab === 'password'
-                            ? 'border-b-2 border-pink-500 text-pink-600 dark:text-pink-400'
+                            ? 'border-b-2 border-amber-700 text-amber-800 dark:text-amber-500'
                             : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                             }`}
                         onClick={() => setActiveTab('password')}
@@ -237,7 +237,7 @@ export default function EditProfile({ initialTab = 'profile', hideProfileTab = f
                             <input
                                 id="name"
                                 type="text"
-                                className={`w-full px-4 py-3 text-gray-700 border ${profileErrors.name ? 'border-red-500 dark:border-red-400' : 'border-gray-200 dark:border-gray-700'} rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 dark:bg-gray-800 dark:text-white`}
+                                className={`w-full px-4 py-3 text-gray-700 border ${profileErrors.name ? 'border-red-500 dark:border-red-400' : 'border-gray-200 dark:border-gray-700'} rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-gray-800 dark:text-white`}
                                 placeholder="Enter your full name"
                                 {...registerProfile('name')}
                             />
@@ -312,8 +312,8 @@ export default function EditProfile({ initialTab = 'profile', hideProfileTab = f
                                     <div className="h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
                                         <div
                                             className={`h-full ${passwordStrength < 40 ? 'bg-red-500' :
-                                                    passwordStrength < 80 ? 'bg-yellow-500' :
-                                                        'bg-green-500'
+                                                passwordStrength < 80 ? 'bg-yellow-500' :
+                                                    'bg-green-500'
                                                 }`}
                                             style={{ width: `${passwordStrength}%` }}
                                         ></div>
@@ -369,9 +369,9 @@ export default function EditProfile({ initialTab = 'profile', hideProfileTab = f
                         <button
                             type="submit"
                             disabled={isUpdating}
-                            className="px-6 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-6 py-2 bg-gradient-to-r from-amber-700 to-orange-600 text-white rounded-full hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {isUpdating ? 'Updating...' : 'Change Password'}
+                            {isUpdating ? 'Updating...' : 'Update Profile'}
                         </button>
                     </div>
                 </form>

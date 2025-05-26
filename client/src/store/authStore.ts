@@ -1,11 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import api from "@/services/api";
-import { toast } from "react-toastify";
 import { AxiosError } from "axios";
 import Cookies from "js-cookie";
 import { createJSONStorage } from "zustand/middleware";
 import { StateStorage } from "zustand/middleware";
+import { authToast } from "@/utils/toast";
 
 const cookieStorage: StateStorage = {
   getItem: (name: string) => {
@@ -95,13 +95,13 @@ export const useAuthStore = create<AuthState>()(
 
           if (data.success && data.userId) {
             set({ tempUserId: data.userId });
-            toast.success("OTP sent to your email");
+            authToast.otpSent(); // Updated to use our custom toast
             return;
           }
         } catch (error) {
           // Use type assertion for the error
           const axiosError = error as AxiosError<ApiErrorResponse>;
-          toast.error(axiosError.response?.data?.message || "Login failed");
+          authToast.error(axiosError.response?.data?.message || "Login failed");
           throw error;
         } finally {
           set({ isLoading: false });
@@ -119,12 +119,12 @@ export const useAuthStore = create<AuthState>()(
 
           if (data.success && data.userId) {
             set({ tempUserId: data.userId });
-            toast.success("OTP sent to your email");
+            authToast.otpSent(); // Updated to use our custom toast
             return;
           }
         } catch (error) {
           const axiosError = error as AxiosError<ApiErrorResponse>;
-          toast.error(
+          authToast.error(
             axiosError.response?.data?.message || "Registration failed"
           );
           throw error;
@@ -139,7 +139,7 @@ export const useAuthStore = create<AuthState>()(
           const tempUserId = get().tempUserId;
 
           if (!tempUserId) {
-            toast.error("Session expired");
+            authToast.error("Session expired");
             throw new Error("No temporary user ID found");
           }
 
@@ -173,13 +173,16 @@ export const useAuthStore = create<AuthState>()(
             tempUserId: null,
           });
 
-          toast.success(
-            isRegistration ? "Registration successful!" : "Login successful!"
-          );
+          // Use different toast messages based on action
+          if (isRegistration) {
+            authToast.registerSuccess();
+          } else {
+            authToast.loginSuccess();
+          }
           return true;
         } catch (error) {
           const axiosError = error as AxiosError<ApiErrorResponse>;
-          toast.error(
+          authToast.error(
             axiosError.response?.data?.message ||
               (isRegistration ? "Registration failed" : "Login failed")
           );
@@ -195,6 +198,9 @@ export const useAuthStore = create<AuthState>()(
           await api
             .post("/auth/logout")
             .catch((e) => console.error("Logout API error:", e));
+
+          // Show logout toast notification
+          authToast.logout();
         } catch (error) {
           console.error("Logout failed:", error);
         } finally {
@@ -225,11 +231,11 @@ export const useAuthStore = create<AuthState>()(
           });
 
           if (data.success) {
-            toast.success("Password has been reset successfully");
+            authToast.passwordReset();
           }
         } catch (error) {
           const axiosError = error as AxiosError<ApiErrorResponse>;
-          toast.error(
+          authToast.error(
             axiosError.response?.data?.message || "Password reset failed"
           );
           throw error;
@@ -244,11 +250,11 @@ export const useAuthStore = create<AuthState>()(
           const { data } = await api.post("/auth/forgot-password", { email });
 
           if (data.success) {
-            toast.success("Password reset instructions sent to your email");
+            authToast.info("Password reset instructions sent to your email");
           }
         } catch (error) {
           const axiosError = error as AxiosError<ApiErrorResponse>;
-          toast.error(
+          authToast.error(
             axiosError.response?.data?.message ||
               "Forgot password request failed"
           );
@@ -268,12 +274,12 @@ export const useAuthStore = create<AuthState>()(
             set({
               user: data.user,
             });
-            toast.success("Profile updated successfully");
+            authToast.success("Profile updated successfully");
           }
           return true;
         } catch (error) {
           const axiosError = error as AxiosError<ApiErrorResponse>;
-          toast.error(
+          authToast.error(
             axiosError.response?.data?.message || "Failed to update profile"
           );
           throw error;
@@ -291,12 +297,12 @@ export const useAuthStore = create<AuthState>()(
           });
 
           if (data.success) {
-            toast.success("Password updated successfully");
+            authToast.success("Password updated successfully");
           }
           return true;
         } catch (error) {
           const axiosError = error as AxiosError<ApiErrorResponse>;
-          toast.error(
+          authToast.error(
             axiosError.response?.data?.message || "Failed to update password"
           );
           throw error;
