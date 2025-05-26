@@ -3,6 +3,10 @@ import Post from "../models/Post";
 import mongoose from "mongoose";
 import { AuthRequest } from "../middleware/auth";
 import User from "../models/User";
+import {
+  createNotification,
+  NotificationType,
+} from "../services/notificationService";
 
 // Get all posts (with authentication)
 export const getPosts = async (req: Request, res: Response): Promise<void> => {
@@ -124,7 +128,9 @@ export const updatePost = async (
 
     // Check if user is the author or an editor
     const isAuthor = post.author.toString() === userId;
-    const isEditor = post.editors.some((editorId) => editorId.toString() === userId);
+    const isEditor = post.editors.some(
+      (editorId) => editorId.toString() === userId
+    );
 
     if (!isAuthor && !isEditor) {
       res.status(403).json({
@@ -215,6 +221,16 @@ export const likePost = async (req: Request, res: Response): Promise<void> => {
       // Like the post
       post.likes.push(new mongoose.Types.ObjectId(userId));
       message = "Post liked successfully";
+      // Create notification for post author if they're not the one liking
+      if (post.author.toString() !== userId) {
+        await createNotification({
+          recipientId: post.author.toString(),
+          senderId: userId,
+          type: NotificationType.LIKE,
+          postId: post.id.toString(),
+          message: `Someone liked your post: ${post.title}`,
+        });
+      }
     } else {
       // Unlike the post
       post.likes = post.likes.filter((id) => id.toString() !== userId);
@@ -266,6 +282,18 @@ export const addComment = async (
 
     post.comments.push(newComment);
     await post.save();
+
+    // Create notification for post author if they're not the one commenting
+    if (post.author.toString() !== userId) {
+      await createNotification({
+        recipientId: post.author.toString(),
+        senderId: userId,
+        type: NotificationType.COMMENT,
+        postId: post.id.toString(),
+        commentId: newComment._id.toString(),
+        message: `Someone commented on your post: ${post.title}`,
+      });
+    }
 
     // Populate user info in the new comment
     const populatedPost = await Post.findById(post._id)
@@ -343,13 +371,9 @@ export const deleteComment = async (
       error: error instanceof Error ? error.message : "Unknown error",
     });
   }
-  
 };
 
-export const addEditor = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const addEditor = async (req: Request, res: Response): Promise<void> => {
   try {
     const authReq = req as AuthRequest;
     const { email } = req.body;
@@ -380,19 +404,23 @@ export const addEditor = async (
     }
 
     // Check if user is already an editor
-    if (post.editors.some((editorId) => editorId.toString() === userToAdd._id.toString())) {
-      res.status(400).json({ 
-        success: false, 
-        message: "This user is already an editor for this post" 
+    if (
+      post.editors.some(
+        (editorId) => editorId.toString() === userToAdd._id.toString()
+      )
+    ) {
+      res.status(400).json({
+        success: false,
+        message: "This user is already an editor for this post",
       });
       return;
     }
 
     // Check if user is the author (can't be both author and editor)
     if (post.author.toString() === userToAdd._id.toString()) {
-      res.status(400).json({ 
-        success: false, 
-        message: "The author cannot be added as an editor" 
+      res.status(400).json({
+        success: false,
+        message: "The author cannot be added as an editor",
       });
       return;
     }
@@ -400,6 +428,15 @@ export const addEditor = async (
     // Add user to editors
     post.editors.push(userToAdd._id);
     await post.save();
+
+    // Create notification for the added editor
+    await createNotification({
+      recipientId: userToAdd._id.toString(),
+      senderId: userId,
+      type: NotificationType.EDITOR_ADDED,
+      postId: post.id.toString(),
+      message: `You were added as an editor to: ${post.title}`,
+    });
 
     // Return the updated post with populated editors
     const updatedPost = await Post.findById(postId)
@@ -409,8 +446,8 @@ export const addEditor = async (
     res.status(200).json({
       success: true,
       message: "Editor added successfully",
-      data: { 
-        editors: updatedPost?.editors 
+      data: {
+        editors: updatedPost?.editors,
       },
     });
   } catch (error) {
@@ -452,9 +489,9 @@ export const removeEditor = async (
 
     // Check if editor exists
     if (!post.editors.some((id) => id.toString() === editorId)) {
-      res.status(404).json({ 
-        success: false, 
-        message: "Editor not found for this post" 
+      res.status(404).json({
+        success: false,
+        message: "Editor not found for this post",
       });
       return;
     }
@@ -462,12 +499,19 @@ export const removeEditor = async (
     // Remove editor
     post.editors = post.editors.filter((id) => id.toString() !== editorId);
     await post.save();
+    await createNotification({
+      recipientId: editorId,
+      senderId: userId,
+      type: NotificationType.SYSTEM, // or define a new EDITOR_REMOVED type
+      postId: post.id.toString(),
+      message: `You have been removed as an editor from: ${post.title}`,
+    });
 
     res.status(200).json({
       success: true,
       message: "Editor removed successfully",
-      data: { 
-        editors: post.editors 
+      data: {
+        editors: post.editors,
       },
     });
   } catch (error) {
@@ -499,8 +543,8 @@ export const getEditors = async (
 
     res.status(200).json({
       success: true,
-      data: { 
-        editors: post.editors 
+      data: {
+        editors: post.editors,
       },
     });
   } catch (error) {

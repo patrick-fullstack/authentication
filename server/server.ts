@@ -10,6 +10,7 @@ import connectDB from "./config/db";
 import authRoutes from "./routes/authRoutes";
 import mongoose from "mongoose";
 import postRoutes from "./routes/postRoutes";
+import notificationRoutes from "./routes/notificationRoutes";
 
 // Handle uncaught exceptions
 process.on("uncaughtException", (err) => {
@@ -238,6 +239,7 @@ app.get("/api/system/status", async (req, res) => {
 // Mount routes
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Default route
 app.get("/", (req, res) => {
