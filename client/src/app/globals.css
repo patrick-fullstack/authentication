@@ -17,6 +17,13 @@
   /* Accent colors - made slightly darker for better contrast */
   --accent-color: #c1684f; /* Darker terracotta for better contrast */
   --accent-hover: #a85642; /* Even darker terracotta */
+  
+  /* Navigation and header hover effects */
+  --nav-item-hover-bg: rgba(193, 104, 79, 0.1);
+  --nav-item-active-bg: rgba(193, 104, 79, 0.2);
+  --dropdown-hover-bg: #f5efe7;
+  --button-hover-bg: #f5efe7;
+  --icon-button-hover-bg: rgba(193, 104, 79, 0.1);
 }
 
 /* Media query for system preference dark mode */
@@ -36,6 +43,13 @@
 
     --accent-color: #e49273; /* Lighter terracotta */
     --accent-hover: #f0a387; /* Peach */
+    
+    /* Navigation and header hover effects - dark mode */
+    --nav-item-hover-bg: rgba(228, 146, 115, 0.15);
+    --nav-item-active-bg: rgba(228, 146, 115, 0.25);
+    --dropdown-hover-bg: #473931;
+    --button-hover-bg: #473931;
+    --icon-button-hover-bg: rgba(228, 146, 115, 0.15);
   }
 }
 
@@ -51,6 +65,13 @@
   --text-secondary: #d2c5b0; /* Light wood text */
   --accent-color: #e49273; /* Lighter terracotta */
   --accent-hover: #f0a387; /* Peach */
+  
+  /* Navigation and header hover effects - dark mode */
+  --nav-item-hover-bg: rgba(228, 146, 115, 0.15);
+  --nav-item-active-bg: rgba(228, 146, 115, 0.25);
+  --dropdown-hover-bg: #473931;
+  --button-hover-bg: #473931;
+  --icon-button-hover-bg: rgba(228, 146, 115, 0.15);
 }
 
 /* Override for light theme with improved readability */
@@ -65,6 +86,13 @@
   --text-secondary: #6a5c52; /* Darker medium oak for better readability */
   --accent-color: #c1684f; /* Darker terracotta for better contrast */
   --accent-hover: #a85642; /* Even darker terracotta */
+  
+  /* Navigation and header hover effects - light mode */
+  --nav-item-hover-bg: rgba(193, 104, 79, 0.1);
+  --nav-item-active-bg: rgba(193, 104, 79, 0.2);
+  --dropdown-hover-bg: #f5efe7;
+  --button-hover-bg: #f5efe7;
+  --icon-button-hover-bg: rgba(193, 104, 79, 0.1);
 }
 
 body {
@@ -89,7 +117,7 @@ textarea,
 select,
 svg {
   transition: background-color 0.3s ease, border-color 0.3s ease,
-    color 0.2s ease;
+    color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 /* Form elements should use the custom colors */
@@ -106,11 +134,103 @@ a {
   color: var(--accent-color);
   text-decoration: none;
   font-weight: 500;
+  transition: color 0.2s ease, background-color 0.2s ease, transform 0.1s ease;
 }
 
 a:hover {
   color: var(--accent-hover);
   text-decoration: underline;
+}
+
+/* Enhanced button hover effects */
+button:not(.no-hover-effect):hover,
+.button:hover {
+  background-color: var(--button-hover-bg);
+  transform: translateY(-1px);
+}
+
+button:not(.no-hover-effect):active,
+.button:active {
+  transform: translateY(0);
+}
+
+/* Header and navigation elements */
+.nav-item {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+  background-color: var(--nav-item-hover-bg);
+}
+
+.nav-item.active {
+  background-color: var(--nav-item-active-bg);
+}
+
+/* Navigation dropdown styles */
+.dropdown-item {
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: var(--dropdown-hover-bg);
+}
+
+/* Icon button hover effect */
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border-radius: 0.375rem;
+}
+
+.icon-button:hover {
+  background-color: var(--icon-button-hover-bg);
+}
+
+.icon-button:active {
+  transform: scale(0.95);
+}
+
+/* Avatar hover effects */
+.avatar {
+  transition: all 0.2s ease;
+}
+
+.avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 2px var(--accent-color);
+}
+
+/* Header area specific styles */
+.header-link {
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.header-link:hover {
+  color: var(--accent-color);
+}
+
+.header-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -4px;
+  left: 0;
+  background-color: var(--accent-color);
+  transition: width 0.2s ease;
+}
+
+.header-link:hover::after {
+  width: 100%;
+}
+
+.header-link.active::after {
+  width: 100%;
 }
 
 /* Dark mode utility classes */
@@ -140,6 +260,16 @@ a:hover {
 
 [data-theme="dark"] .dark\:hover\:bg-gray-800:hover {
   background-color: #473931; /* Slightly lighter rich walnut for hover */
+}
+
+/* Utility class for hover effects on cards */
+.hover-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 /* Card and container styles */
