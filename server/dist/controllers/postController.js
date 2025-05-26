@@ -16,6 +16,7 @@ exports.getEditors = exports.removeEditor = exports.addEditor = exports.deleteCo
 const Post_1 = __importDefault(require("../models/Post"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const User_1 = __importDefault(require("../models/User"));
+const notificationService_1 = require("../services/notificationService");
 // Get all posts (with authentication)
 const getPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -201,6 +202,16 @@ const likePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             // Like the post
             post.likes.push(new mongoose_1.default.Types.ObjectId(userId));
             message = "Post liked successfully";
+            // Create notification for post author if they're not the one liking
+            if (post.author.toString() !== userId) {
+                yield (0, notificationService_1.createNotification)({
+                    recipientId: post.author.toString(),
+                    senderId: userId,
+                    type: notificationService_1.NotificationType.LIKE,
+                    postId: post.id.toString(),
+                    message: `Someone liked your post: ${post.title}`,
+                });
+            }
         }
         else {
             // Unlike the post
@@ -246,6 +257,17 @@ const addComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         };
         post.comments.push(newComment);
         yield post.save();
+        // Create notification for post author if they're not the one commenting
+        if (post.author.toString() !== userId) {
+            yield (0, notificationService_1.createNotification)({
+                recipientId: post.author.toString(),
+                senderId: userId,
+                type: notificationService_1.NotificationType.COMMENT,
+                postId: post.id.toString(),
+                commentId: newComment._id.toString(),
+                message: `Someone commented on your post: ${post.title}`,
+            });
+        }
         // Populate user info in the new comment
         const populatedPost = yield Post_1.default.findById(post._id)
             .populate("comments.user", "name")
@@ -341,7 +363,7 @@ const addEditor = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         if (post.editors.some((editorId) => editorId.toString() === userToAdd._id.toString())) {
             res.status(400).json({
                 success: false,
-                message: "This user is already an editor for this post"
+                message: "This user is already an editor for this post",
             });
             return;
         }
@@ -349,13 +371,21 @@ const addEditor = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         if (post.author.toString() === userToAdd._id.toString()) {
             res.status(400).json({
                 success: false,
-                message: "The author cannot be added as an editor"
+                message: "The author cannot be added as an editor",
             });
             return;
         }
         // Add user to editors
         post.editors.push(userToAdd._id);
         yield post.save();
+        // Create notification for the added editor
+        yield (0, notificationService_1.createNotification)({
+            recipientId: userToAdd._id.toString(),
+            senderId: userId,
+            type: notificationService_1.NotificationType.EDITOR_ADDED,
+            postId: post.id.toString(),
+            message: `You were added as an editor to: ${post.title}`,
+        });
         // Return the updated post with populated editors
         const updatedPost = yield Post_1.default.findById(postId)
             .populate("editors", "name email")
@@ -364,7 +394,7 @@ const addEditor = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             success: true,
             message: "Editor added successfully",
             data: {
-                editors: updatedPost === null || updatedPost === void 0 ? void 0 : updatedPost.editors
+                editors: updatedPost === null || updatedPost === void 0 ? void 0 : updatedPost.editors,
             },
         });
     }
@@ -403,18 +433,25 @@ const removeEditor = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         if (!post.editors.some((id) => id.toString() === editorId)) {
             res.status(404).json({
                 success: false,
-                message: "Editor not found for this post"
+                message: "Editor not found for this post",
             });
             return;
         }
         // Remove editor
         post.editors = post.editors.filter((id) => id.toString() !== editorId);
         yield post.save();
+        yield (0, notificationService_1.createNotification)({
+            recipientId: editorId,
+            senderId: userId,
+            type: notificationService_1.NotificationType.SYSTEM, // or define a new EDITOR_REMOVED type
+            postId: post.id.toString(),
+            message: `You have been removed as an editor from: ${post.title}`,
+        });
         res.status(200).json({
             success: true,
             message: "Editor removed successfully",
             data: {
-                editors: post.editors
+                editors: post.editors,
             },
         });
     }
@@ -442,7 +479,7 @@ const getEditors = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         res.status(200).json({
             success: true,
             data: {
-                editors: post.editors
+                editors: post.editors,
             },
         });
     }

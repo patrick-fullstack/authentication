@@ -24,6 +24,7 @@ const db_1 = __importDefault(require("./config/db"));
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const postRoutes_1 = __importDefault(require("./routes/postRoutes"));
+const notificationRoutes_1 = __importDefault(require("./routes/notificationRoutes"));
 // Handle uncaught exceptions
 process.on("uncaughtException", (err) => {
     console.error("UNCAUGHT EXCEPTION:", err);
@@ -193,6 +194,7 @@ app.get("/api/system/status", (req, res) => __awaiter(void 0, void 0, void 0, fu
 // Mount routes
 app.use("/api/auth", authRoutes_1.default);
 app.use("/api/posts", postRoutes_1.default);
+app.use("/api/notifications", notificationRoutes_1.default);
 // Default route
 app.get("/", (req, res) => {
     res.send("API is running...");
