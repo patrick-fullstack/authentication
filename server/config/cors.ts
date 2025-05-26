@@ -1,16 +1,18 @@
 import cors from "cors";
 import { env } from "./env";
 
+// Parse allowed origins from environment variables
+const getAllowedOrigins = () => {
+  // Start with the primary client URL from environment
+  const origins = [env.CLIENT_URL];
+  
+  // Filter out any undefined/empty values
+  return origins.filter(Boolean);
+};
+
 // CORS configuration
 const corsOptions = {
-  origin:
-    env.NODE_ENV === "development"
-      ? ["http://localhost:3000"]
-      : [
-          "http://localhost:3000",
-          "https://authentication-client-mu.vercel.app",
-          "https://authentication-client.vercel.app",
-        ],
+  origin: getAllowedOrigins(),
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
