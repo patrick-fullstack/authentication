@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getEditors = exports.removeEditor = exports.addEditor = exports.deleteComment = exports.addComment = exports.likePost = exports.deletePost = exports.updatePost = exports.createPost = exports.getPost = exports.getPosts = void 0;
+exports.getEditors = exports.removeEditor = exports.addEditor = exports.deleteComment = exports.addComment = exports.likePost = exports.deletePost = exports.updatePost = exports.createPost = exports.getUserPosts = exports.getPost = exports.getPosts = void 0;
 const Post_1 = __importDefault(require("../models/Post"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const User_1 = __importDefault(require("../models/User"));
@@ -83,6 +83,49 @@ const getPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.getPost = getPost;
+const getUserPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const authReq = req;
+        // Get user ID from params or use authenticated user's ID
+        let userId = req.params.userId;
+        if (!userId) {
+            userId = authReq.user.id; // Default to authenticated user
+        }
+        // Add pagination
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const posts = yield Post_1.default.find({ author: userId })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate("author", "name")
+            .populate("editors", "name")
+            .lean();
+        const total = yield Post_1.default.countDocuments({ author: userId });
+        res.status(200).json({
+            success: true,
+            data: {
+                posts,
+                pagination: {
+                    total,
+                    page,
+                    pages: Math.ceil(total / limit),
+                    limit,
+                },
+            },
+        });
+    }
+    catch (error) {
+        console.error("Error fetching user posts:", error);
+        res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error instanceof Error ? error.message : "Unknown error",
+        });
+    }
+});
+exports.getUserPosts = getUserPosts;
 // Create a post (authenticated)
 const createPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {

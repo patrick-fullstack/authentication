@@ -78,6 +78,56 @@ export const getPost = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+export const getUserPosts = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const authReq = req as AuthRequest;
+
+    // Get user ID from params or use authenticated user's ID
+    let userId = req.params.userId;
+    if (!userId) {
+      userId = authReq.user.id; // Default to authenticated user
+    }
+
+    // Add pagination
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const posts = await Post.find({ author: userId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("author", "name")
+      .populate("editors", "name")
+      .lean();
+
+    const total = await Post.countDocuments({ author: userId });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        posts,
+        pagination: {
+          total,
+          page,
+          pages: Math.ceil(total / limit),
+          limit,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching user posts:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
 // Create a post (authenticated)
 export const createPost = async (
   req: Request,

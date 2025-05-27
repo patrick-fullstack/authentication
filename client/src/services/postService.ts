@@ -20,6 +20,18 @@ const postService = {
     return response.data;
   },
 
+  // Get posts by user ID
+  getUserPosts: async (
+    userId: string,
+    page = 1,
+    limit = 10
+  ): Promise<PostsResponse> => {
+    const endpoint =
+      userId === "me" ? `/posts/user/me` : `/posts/user/${userId}`;
+    const response = await api.get(`${endpoint}?page=${page}&limit=${limit}`);
+    return response.data;
+  },
+
   // Create a new post
   createPost: async (title: string, content: string): Promise<PostResponse> => {
     const response = await api.post("/posts", { title, content });
@@ -69,13 +81,19 @@ const postService = {
   },
 
   // Add an editor to a post
-  addEditor: async (postId: string, email: string): Promise<EditorsResponse> => {
+  addEditor: async (
+    postId: string,
+    email: string
+  ): Promise<EditorsResponse> => {
     const response = await api.post(`/posts/${postId}/editors`, { email });
     return response.data;
   },
 
   // Remove an editor from a post
-  removeEditor: async (postId: string, editorId: string): Promise<EditorsResponse> => {
+  removeEditor: async (
+    postId: string,
+    editorId: string
+  ): Promise<EditorsResponse> => {
     const response = await api.delete(`/posts/${postId}/editors/${editorId}`);
     return response.data;
   },

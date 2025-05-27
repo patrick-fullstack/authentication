@@ -14,6 +14,9 @@ router.post("/", auth_1.protect, validation_1.postValidation, validation_1.valid
 router.get("/:id", auth_1.protect, postController_1.getPost);
 router.put("/:id", auth_1.protect, validation_1.postUpdateValidation, validation_1.validate, postController_1.updatePost);
 router.delete("/:id", auth_1.protect, postController_1.deletePost);
+// User-specific posts - Add these two routes
+router.get("/user/me", auth_1.protect, postController_1.getUserPosts); // Get authenticated user's posts
+router.get("/user/:userId", auth_1.protect, postController_1.getUserPosts); // Get specific user's posts
 // Like/unlike
 router.put("/:id/like", auth_1.protect, postController_1.likePost);
 // Comments

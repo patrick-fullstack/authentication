@@ -11,6 +11,7 @@ import {
   addEditor,
   removeEditor,
   getEditors,
+  getUserPosts,
 } from "../controllers/postController";
 import { protect } from "../middleware/auth";
 import {
@@ -29,6 +30,10 @@ router.post("/", protect, postValidation, validate, createPost);
 router.get("/:id", protect, getPost);
 router.put("/:id", protect, postUpdateValidation, validate, updatePost);
 router.delete("/:id", protect, deletePost);
+
+// User-specific posts - Add these two routes
+router.get("/user/me", protect, getUserPosts); // Get authenticated user's posts
+router.get("/user/:userId", protect, getUserPosts); // Get specific user's posts
 
 // Like/unlike
 router.put("/:id/like", protect, likePost);

@@ -124,6 +124,17 @@ export default function Header() {
                   </svg>
                 </div>
               </Link>
+              <Link
+                href="/user/posts/me"
+                className={`nav-item p-1 ${isActivePath('/user/posts') ? 'active text-amber-700' : 'text-gray-700 dark:text-gray-300'}`}
+              >
+                <div className="flex flex-col items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2" />
+                  </svg>
+                </div>
+              </Link>
 
               {/* Notification Bell */}
               <div className="relative" ref={notificationsRef}>
@@ -189,6 +200,18 @@ export default function Header() {
                     </div>
 
                     <div className="py-1">
+                      <Link
+                        href="/user/posts/me"
+                        className="dropdown-item block px-4 py-2 text-sm text-gray-700 dark:text-gray-300"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <div className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                          </svg>
+                          My Posts
+                        </div>
+                      </Link>
                       <Link
                         href="/account-settings"
                         className="dropdown-item block px-4 py-2 text-sm text-gray-700 dark:text-gray-300"
@@ -291,7 +314,7 @@ export default function Header() {
             </Link>
 
             <Link
-              href="/account-settings"
+              href="/user/posts/me"
               className={`nav-item p-2 rounded-lg ${isActivePath('/account-settings') ? 'active text-amber-700' : 'text-gray-700 dark:text-gray-300'}`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

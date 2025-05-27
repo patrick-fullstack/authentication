@@ -16,6 +16,14 @@ interface PostState {
     limit: number;
   };
 
+  userPosts: Post[];
+  userPostsPagination: {
+    total: number;
+    page: number;
+    pages: number;
+    limit: number;
+  };
+
   // Actions
   fetchPosts: (page?: number, limit?: number) => Promise<void>;
   fetchPost: (id: string) => Promise<void>;
@@ -31,6 +39,11 @@ interface PostState {
   addEditor: (postId: string, email: string) => Promise<User[] | null>;
   removeEditor: (postId: string, editorId: string) => Promise<boolean>;
   fetchEditors: (postId: string) => Promise<User[] | null>;
+  fetchUserPosts: (
+    userId: string,
+    page?: number,
+    limit?: number
+  ) => Promise<void>;
 }
 
 export const usePostStore = create<PostState>((set, get) => ({
@@ -39,6 +52,14 @@ export const usePostStore = create<PostState>((set, get) => ({
   isLoading: false,
   error: null,
   pagination: {
+    total: 0,
+    page: 1,
+    pages: 1,
+    limit: 10,
+  },
+
+  userPosts: [],
+  userPostsPagination: {
     total: 0,
     page: 1,
     pages: 1,
@@ -61,6 +82,29 @@ export const usePostStore = create<PostState>((set, get) => ({
       const axiosError = error as AxiosError<{ message: string }>;
       const errorMessage =
         axiosError.response?.data?.message || "Failed to fetch posts";
+      set({ error: errorMessage });
+      postToast.error(errorMessage);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  // Fetch posts for a specific user
+  fetchUserPosts: async (userId: string, page = 1, limit = 10) => {
+    try {
+      set({ isLoading: true, error: null });
+      const response = await postService.getUserPosts(userId, page, limit);
+
+      if (response.success) {
+        set({
+          userPosts: response.data.posts,
+          userPostsPagination: response.data.pagination,
+        });
+      }
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message: string }>;
+      const errorMessage =
+        axiosError.response?.data?.message || "Failed to fetch user posts";
       set({ error: errorMessage });
       postToast.error(errorMessage);
     } finally {

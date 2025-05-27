@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "description": "Authentication server with 2FA",
   "main": "dist/server.js",
-"scripts": {
-  "start": "node dist/server.js",
-  "dev": "ts-node-dev --respawn server.ts",
-  "build": "tsc && if not exist dist\\api mkdir dist\\api && echo import app from '../server'; export default app; > dist\\api\\index.js",
-  "test": "echo \"Error: no test specified\" && exit 1"
-},
+  "scripts": {
+    "start": "node dist/server.js",
+    "dev": "ts-node-dev --respawn server.ts",
+    "build": "tsc && if not exist dist\\api mkdir dist\\api && echo import app from '../server'; export default app; > dist\\api\\index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "dependencies": {
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
