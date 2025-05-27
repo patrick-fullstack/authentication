@@ -11,12 +11,13 @@ const router = express_1.default.Router();
 // Base routes
 router.get("/", auth_1.protect, postController_1.getPosts);
 router.post("/", auth_1.protect, validation_1.postValidation, validation_1.validate, postController_1.createPost);
+// User-specific posts
+router.get("/user/me", auth_1.protect, postController_1.getUserPosts); // Get authenticated user's posts
+router.get("/user/:userId", auth_1.protect, postController_1.getUserPosts); // Get specific user's posts
+// Generic ID routes
 router.get("/:id", auth_1.protect, postController_1.getPost);
 router.put("/:id", auth_1.protect, validation_1.postUpdateValidation, validation_1.validate, postController_1.updatePost);
 router.delete("/:id", auth_1.protect, postController_1.deletePost);
-// User-specific posts - Add these two routes
-router.get("/user/me", auth_1.protect, postController_1.getUserPosts); // Get authenticated user's posts
-router.get("/user/:userId", auth_1.protect, postController_1.getUserPosts); // Get specific user's posts
 // Like/unlike
 router.put("/:id/like", auth_1.protect, postController_1.likePost);
 // Comments

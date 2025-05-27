@@ -27,13 +27,15 @@ const router = express.Router();
 // Base routes
 router.get("/", protect, getPosts);
 router.post("/", protect, postValidation, validate, createPost);
+
+// User-specific posts
+router.get("/user/me", protect, getUserPosts); // Get authenticated user's posts
+router.get("/user/:userId", protect, getUserPosts); // Get specific user's posts
+
+// Generic ID routes
 router.get("/:id", protect, getPost);
 router.put("/:id", protect, postUpdateValidation, validate, updatePost);
 router.delete("/:id", protect, deletePost);
-
-// User-specific posts - Add these two routes
-router.get("/user/me", protect, getUserPosts); // Get authenticated user's posts
-router.get("/user/:userId", protect, getUserPosts); // Get specific user's posts
 
 // Like/unlike
 router.put("/:id/like", protect, likePost);
