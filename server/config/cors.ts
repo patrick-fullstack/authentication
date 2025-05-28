@@ -5,7 +5,7 @@ import { env } from "./env";
 const getAllowedOrigins = () => {
   // Start with the primary client URL from environment
   const origins = [env.CLIENT_URL];
-  
+
   // Filter out any undefined/empty values
   return origins.filter(Boolean);
 };
@@ -14,8 +14,9 @@ const getAllowedOrigins = () => {
 const corsOptions = {
   origin: getAllowedOrigins(),
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  exposedHeaders: ["X-Total-Count"],
   optionsSuccessStatus: 200,
 };
 
