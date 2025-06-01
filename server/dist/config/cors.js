@@ -7,15 +7,18 @@ exports.configureCors = void 0;
 const cors_1 = __importDefault(require("cors"));
 const env_1 = require("./env");
 // Parse allowed origins from environment variables
-const getAllowedOrigins = () => {
-    // Start with the primary client URL from environment
-    const origins = [env_1.env.CLIENT_URL];
-    // Filter out any undefined/empty values
-    return origins.filter(Boolean);
-};
+const getAllowedOrigins = () => [env_1.env.CLIENT_URL].filter(Boolean);
 // CORS configuration
 const corsOptions = {
-    origin: getAllowedOrigins(),
+    origin: function (origin, callback) {
+        const allowedOrigins = getAllowedOrigins();
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        }
+        else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
